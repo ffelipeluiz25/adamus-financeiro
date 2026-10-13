@@ -54,11 +54,34 @@
     .nav-item:hover{background:var(--bg-card-hover);color:var(--text);}
     .nav-item.active{background:var(--bg-card);color:var(--text);border-left-color:var(--accent);font-weight:600;}
     .nav-item.active i{color:var(--accent);}
-    .sidebar-footer{margin-top:auto;padding:16px 22px 4px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-    .avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;flex-shrink:0;font-size:15px;}
-    .sidebar-footer .info{line-height:1.2;flex:1;min-width:0;overflow:hidden;}
-    .sidebar-footer .info b{font-size:14px;white-space:nowrap;}
-    .sidebar-footer .info small{color:var(--text-dim);font-size:10px;letter-spacing:.5px;}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--accent) center/cover no-repeat;color:#fff;display:grid;place-items:center;font-weight:700;flex-shrink:0;font-size:15px;}
+    .avatar.foto{color:transparent;}
+
+    /* Menu do usuário (barra superior) */
+    .user-btn{display:flex;align-items:center;gap:10px;height:46px;padding:4px 12px 4px 5px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text);cursor:pointer;max-width:280px;transition:border-color .15s;}
+    .user-btn:hover,.user-btn[aria-expanded="true"]{border-color:var(--accent);}
+    .user-btn .avatar{width:34px;height:34px;font-size:14px;}
+    .user-btn .user-nome{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-btn .bi-chevron-down{font-size:12px;color:var(--text-muted);transition:transform .15s;}
+    .user-btn[aria-expanded="true"] .bi-chevron-down{transform:rotate(180deg);}
+    .user-menu{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    .user-menu .menu-head{padding:8px 12px 10px;line-height:1.25;color:var(--text);}
+    .user-menu .menu-head small{display:block;color:var(--text-dim);font-size:10.5px;letter-spacing:.6px;margin-top:2px;}
+    .user-menu .dropdown-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--text);font-size:14.5px;cursor:pointer;}
+    .user-menu .dropdown-item i{font-size:18px;}
+    .user-menu .dropdown-item:hover,.user-menu .dropdown-item:focus{background:var(--bg-card-hover);color:var(--text);}
+    .user-menu .dropdown-item.sair,.user-menu .dropdown-item.sair:hover{color:var(--danger);}
+    .user-menu .dropdown-divider{border-color:var(--border);margin:6px 0;}
+
+    /* Meu Perfil */
+    .perfil-panel{max-width:780px;}
+    .foto-row{display:flex;align-items:center;gap:22px;margin-bottom:22px;flex-wrap:wrap;}
+    .foto-big{width:96px;height:96px;border-radius:50%;background:var(--accent) center/cover no-repeat;color:#fff;display:grid;place-items:center;font-size:36px;font-weight:700;flex-shrink:0;}
+    .foto-big.foto{color:transparent;}
+    .btn-plain{background:none;border:none;color:var(--text);font-weight:600;padding:10px 14px;border-radius:9px;cursor:pointer;}
+    .btn-plain:hover{background:var(--bg-card-hover);}
+    .form-control[readonly]{background:var(--bg-card-hover)!important;color:var(--text-muted)!important;}
+    .req{color:var(--danger);}
 
     /* Main */
     .main{flex:1;display:flex;flex-direction:column;min-width:0;}
@@ -235,6 +258,7 @@
       .hide-sm{display:none;}
     }
     @media(max-width:420px){ .hide-xs{display:none;} }
+    @media(max-width:576px){ .user-btn .user-nome,.user-btn .bi-chevron-down{display:none;} .user-btn{padding:4px;} }
 
     /* Campo de dinheiro com prefixo R$ */
     .money-group{position:relative;}
@@ -327,6 +351,18 @@
     .chat-form{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--border);}
     .chat-form textarea{resize:none;}
 
+    /* SweetAlert2 no tema do sistema */
+    .swal2-container{z-index:4000!important;}
+    .swal2-popup{background:var(--bg-card)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:16px!important;}
+    .swal2-title{color:var(--text)!important;font-size:20px!important;}
+    .swal2-html-container{color:var(--text-muted)!important;font-size:14.5px!important;white-space:pre-line;}
+    .swal2-actions{gap:10px;}
+    .swal2-popup.swal2-toast{padding:10px 16px!important;box-shadow:0 10px 30px rgba(0,0,0,.3)!important;}
+    .swal2-popup.swal2-toast .swal2-title{font-size:14px!important;margin:0 6px!important;}
+    .swal2-timer-progress-bar{background:var(--accent)!important;}
+    .btn-perigo{background:var(--danger)!important;border:none;color:#fff!important;font-weight:600;border-radius:9px;padding:10px 20px;}
+    .btn-perigo:hover{background:#dc2626!important;}
+
     /* Situação da gravação no servidor */
     .sync-st{font-size:18px;color:var(--text-dim);display:grid;place-items:center;width:32px;}
     .sync-st.salvando{color:var(--warn);}
@@ -411,14 +447,6 @@
     <div class="nav-item" data-view="servicos"><i class="bi bi-tags"></i> Serviços e Preços</div>
     <div class="nav-item" data-view="funcionarios"><i class="bi bi-people"></i> Funcionários</div>
     <div class="nav-item" data-view="config"><i class="bi bi-gear"></i> Configurações</div>
-    <div class="sidebar-footer">
-      <div class="avatar" id="avatarSide">D</div>
-      <div class="info"><b id="userNome">Responsável</b><br /><small id="userPapel">GESTOR DE OBRAS</small></div>
-      <button class="icon-btn" id="btnSair" title="Sair" style="width:34px;height:34px;flex-shrink:0"><i class="bi bi-box-arrow-right"></i></button>
-      <button class="icon-btn" id="themeBtnSide" title="Alternar tema" style="width:34px;height:34px;flex-shrink:0">
-        <i class="bi bi-brightness-high"></i>
-      </button>
-    </div>
   </aside>
   <div class="backdrop" id="backdrop"></div>
 
@@ -436,7 +464,20 @@
         <span class="sync-st" id="syncSt" title="Dados salvos no servidor"><i class="bi bi-cloud-check"></i></span>
         <button class="icon-btn" id="olhoBtn" title="Mostrar / esconder valores"><i class="bi bi-eye-slash"></i></button>
         <button class="icon-btn" id="themeBtn" title="Alternar tema"><i class="bi bi-brightness-high"></i></button>
-        <div class="avatar" id="avatarTop" style="cursor:default;">D</div>
+        <div class="dropdown">
+          <button class="user-btn" id="userBtn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar" id="avatarTop">A</span>
+            <span class="user-nome" id="userNome"></span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end user-menu">
+            <li class="menu-head"><b id="menuNome"></b><small id="userPapel"></small></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" data-view="perfil"><i class="bi bi-person"></i> Meu Perfil</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item sair" id="btnSair"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+          </ul>
+        </div>
       </div>
     </header>
 
@@ -592,6 +633,73 @@
           <form class="chat-form" id="chatForm" novalidate>
             <textarea class="form-control" id="chatTexto" rows="2" placeholder="Escreva uma mensagem… (Enter envia, Shift+Enter quebra linha)"></textarea>
             <button class="btn btn-accent" type="submit" title="Enviar"><i class="bi bi-send"></i></button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW: MEU PERFIL -->
+      <section class="view" id="view-perfil">
+        <div class="panel perfil-panel">
+          <h3 class="panel-title mb-3">Dados Pessoais</h3>
+          <div class="foto-row">
+            <div class="foto-big" id="pfFoto">A</div>
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <label class="btn btn-ghost mb-0"><i class="bi bi-camera"></i> Trocar Foto
+                  <input type="file" accept="image/*" id="pfArquivo" hidden />
+                </label>
+                <button type="button" class="btn-plain" id="pfRemover">Remover</button>
+              </div>
+              <div class="hint mt-2">A imagem é reduzida no seu navegador antes de enviar.</div>
+            </div>
+          </div>
+          <form id="formPerfil" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="pfLogin" id="pfLoginLbl">Usuário</label>
+              <input type="text" class="form-control" id="pfLogin" readonly />
+              <div class="hint mt-1">O login não pode ser alterado por aqui.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="pfNome">Nome Completo <span class="req">*</span></label>
+              <input type="text" class="form-control" id="pfNome" maxlength="120" autocomplete="name" />
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="pfCpf">CPF</label>
+                <input type="text" class="form-control" id="pfCpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off" />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pfCel">Celular</label>
+                <input type="text" class="form-control" id="pfCel" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="tel" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="pfNasc">Data de Nascimento</label>
+              <input type="date" class="form-control" id="pfNasc" />
+            </div>
+            <div id="pfErr" class="a-warn mb-3" style="display:none;"></div>
+            <button type="submit" class="btn btn-accent" id="pfSalvar"><i class="bi bi-floppy"></i> Salvar Alterações</button>
+            <div id="pfOk" class="mt-3" style="display:none;"></div>
+          </form>
+        </div>
+
+        <div class="panel perfil-panel">
+          <h3 class="panel-title mb-3">Alterar Senha</h3>
+          <form id="formSenha" novalidate>
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="pwNova">Nova senha</label>
+                <input type="password" class="form-control" id="pwNova" autocomplete="new-password" />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pwConf">Repita a nova senha</label>
+                <input type="password" class="form-control" id="pwConf" autocomplete="new-password" />
+              </div>
+            </div>
+            <div class="hint mb-3">Mínimo de 6 caracteres.</div>
+            <div id="pwErr" class="a-warn mb-3" style="display:none;"></div>
+            <button type="submit" class="btn btn-ghost" id="pwSalvar"><i class="bi bi-key"></i> Alterar Senha</button>
+            <div id="pwOk" class="mt-3" style="display:none;"></div>
           </form>
         </div>
       </section>
@@ -860,7 +968,7 @@
 </div>
 
 <!-- MODAL: PRODUÇÃO -->
-<div class="modal fade" id="modalProd" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalProd" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
     <div class="modal-content">
       <div class="modal-header">
@@ -922,7 +1030,7 @@
 </div>
 
 <!-- MODAL: VALE -->
-<div class="modal fade" id="modalVale" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalVale" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -962,7 +1070,7 @@
 </div>
 
 <!-- MODAL: RESUMO PARA O GESTOR -->
-<div class="modal fade" id="modalResumo" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalResumo" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -990,7 +1098,7 @@
 </div>
 
 <!-- MODAL: OBRA -->
-<div class="modal fade" id="modalObra" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalObra" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -1037,7 +1145,7 @@
 </div>
 
 <!-- MODAL: ITEM DO ORÇAMENTO -->
-<div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -1079,7 +1187,7 @@
 </div>
 
 <!-- MODAL: SERVIÇO (catálogo) -->
-<div class="modal fade" id="modalSrv" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalSrv" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -1124,7 +1232,7 @@
 </div>
 
 <!-- MODAL: FUNCIONÁRIO -->
-<div class="modal fade" id="modalFunc" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalFunc" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -1159,6 +1267,26 @@
 
 <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="vendor/supabase/supabase.min.js"></script>
+<script src="vendor/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+/* Mensagens do sistema (SweetAlert2) no lugar de alert / confirm do navegador */
+const UI = (() => {
+  const botoes = { confirmButton: "btn btn-accent", cancelButton: "btn btn-ghost" };
+  const base  = Swal.mixin({ buttonsStyling: false, customClass: botoes, confirmButtonText: "OK", cancelButtonText: "Cancelar", reverseButtons: true });
+  const toast = Swal.mixin({ toast: true, position: "top-end", showConfirmButton: false, timer: 2600, timerProgressBar: true });
+  return {
+    ok:    titulo => toast.fire({ icon: "success", title: titulo }),
+    aviso: (texto, titulo = "Atenção") => base.fire({ icon: "warning", title: titulo, text: texto }),
+    erro:  (texto, titulo = "Algo deu errado") => base.fire({ icon: "error", title: titulo, text: texto }),
+    /* → Promise<boolean> */
+    confirmar: (texto, { titulo = "Confirmar", botao = "Confirmar", perigo = false } = {}) =>
+      base.fire({
+        icon: perigo ? "warning" : "question", title: titulo, text: texto, showCancelButton: true, confirmButtonText: botao,
+        customClass: { ...botoes, confirmButton: perigo ? "btn btn-perigo" : "btn btn-accent" },
+      }).then(r => r.isConfirmed),
+  };
+})();
+</script>
 <script>
 /* Monta o sistema depois do login, com os dados já baixados do Supabase (ver script seguinte) */
 function iniciarApp(DB) {
@@ -1332,6 +1460,7 @@ function iniciarApp(DB) {
     dashboard:    null,
     producao:     ["Produção Diária",     "O que cada funcionário executou"],
     mensagens:    ["Mensagens",           "Conversas dentro do sistema"],
+    perfil:       ["Meu Perfil",          "Seus dados pessoais e senha"],
     obras:        ["Obras e Medição",     "Orçamento, avanço e medição"],
     obra:         ["Obra",                "Orçamento, execução e boletim de medição"],
     folha:        ["Folha de Pagamento",  "Produção, vales e líquido a pagar"],
@@ -1346,18 +1475,24 @@ function iniciarApp(DB) {
     const nome = cfg.responsavel.trim().split(/\s+/)[0];
     return (h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite") + (nome ? ", " + nome + "!" : "!");
   }
+  /* Login sem "@adamus.local" (usuário) ou o e-mail real */
+  const loginTxt = () => DB.email.endsWith("@adamus.local") ? DB.email.replace("@adamus.local", "") : DB.email;
+  function pintaAvatar(el, nome, foto) {
+    el.textContent = (nome || "A").trim()[0]?.toUpperCase() || "A";
+    el.style.backgroundImage = foto ? `url("${foto}")` : "";
+    el.classList.toggle("foto", !!foto);
+  }
   function applyBrand() {
-    const nome = DB.perfil.nome || cfg.responsavel.trim() || DB.email;
-    $("#userNome").textContent  = nome;
-    const ini = (nome || "A")[0].toUpperCase();
-    $("#avatarSide").textContent = ini;
-    $("#avatarTop").textContent  = ini;
+    const nome = DB.perfil.nome || loginTxt();
+    $("#userNome").textContent = nome;
+    $("#menuNome").textContent = nome;
+    pintaAvatar($("#avatarTop"), nome, DB.perfil.foto);
   }
   const nomeEmpresa = () => cfg.empresa.trim() || "Adamus Drywall";
 
   let curObraId = null;
   function goTo(view) {
-    if (PAPEL === "encarregado" && view !== "producao" && view !== "mensagens") view = "producao";
+    if (PAPEL === "encarregado" && !["producao", "mensagens", "perfil"].includes(view)) view = "producao";
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + view).classList.add("active");
     const navView = view === "obra" ? "obras" : view;
@@ -1376,6 +1511,7 @@ function iniciarApp(DB) {
     if (view === "dashboard")    renderDashboard();
     if (view === "producao")     renderProducao();
     if (view === "mensagens")    renderChat();
+    if (view === "perfil")       renderPerfil();
     if (view === "obras")        renderObras();
     if (view === "obra")         renderObra();
     if (view === "folha")        renderFolha();
@@ -1402,7 +1538,6 @@ function iniciarApp(DB) {
     try { localStorage.setItem(K.theme, t); } catch (e) { /* sem storage: so a sessao */ }
     const ic = t === "dark" ? "bi-brightness-high" : "bi-moon-stars";
     $("#themeBtn").innerHTML     = `<i class="bi ${ic}"></i>`;
-    $("#themeBtnSide").innerHTML = `<i class="bi ${ic}"></i>`;
   }
   const toggleTheme = () =>
     applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
@@ -1448,7 +1583,6 @@ function iniciarApp(DB) {
   try { ocultarIni = localStorage.getItem("dw_ocultar") !== "0"; } catch {}
   applyOcultar(ocultarIni);
   marcarValores(document.body);
-  $("#themeBtnSide").addEventListener("click", toggleTheme);
   applyTheme(document.documentElement.getAttribute("data-theme") || "dark");
 
   /* ─── Impressão de um painel (folha / boletim) ─── */
@@ -1595,16 +1729,17 @@ function iniciarApp(DB) {
     $("#prBody").innerHTML = html;
   }
 
-  $("#prBody").addEventListener("click", e => {
+  $("#prBody").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit]");
     const dl = e.target.closest("[data-del]");
     if (ed) openModalProd(ed.dataset.edit);
     if (dl) {
       const l = lancs.find(x => x.id === dl.dataset.del);
-      if (!l || !confirm(`Excluir a produção de ${fqu(l.qtd, l.un)} (${l.nome})?`)) return;
+      if (!l || !(await UI.confirmar(`Excluir a produção de ${fqu(l.qtd, l.un)} (${l.nome})?`, { titulo: "Excluir produção", botao: "Excluir", perigo: true }))) return;
       lancs = lancs.filter(x => x.id !== l.id);
       persist(K.lan, lancs);
       renderProducao();
+      UI.ok("Produção excluída.");
     }
   });
 
@@ -1640,7 +1775,7 @@ function iniciarApp(DB) {
   $("#btnResumo").addEventListener("click", () => {
     const st = P.prod, fo = $("#prFiltObra").value, ff = $("#prFiltFunc").value;
     const list = doMes(lancs, st.ano, st.mes).filter(l => (!fo || l.obraId === fo) && (!ff || l.funcId === ff));
-    if (!list.length) return alert("Nenhuma produção lançada neste período com os filtros escolhidos.");
+    if (!list.length) return UI.aviso("Nenhuma produção lançada neste período com os filtros escolhidos.");
     const txt = textoResumo(list);
     $("#rsInfo").innerHTML = `${MESES[st.mes]} de ${st.ano} (${periodoTxt(st.ano, st.mes)})` +
       `${fo ? " · " + esc(nomeObra(fo)) : ""}${ff ? " · " + esc(nomeFunc(ff)) : ""}. Use os filtros da Produção para separar por obra ou funcionário. Dá para editar o texto antes de enviar.`;
@@ -1655,12 +1790,8 @@ function iniciarApp(DB) {
     const ta = $("#rsTexto");
     try { await navigator.clipboard.writeText(ta.value); }
     catch { ta.select(); document.execCommand("copy"); }
-    rsAviso("Texto copiado. Cole na conversa com o gestor.");
+    UI.ok("Texto copiado. Cole na conversa com o gestor.");
   });
-  function rsAviso(txt) {
-    $("#rsOk").innerHTML = `<i class="bi bi-check-circle-fill"></i> ${esc(txt)}`;
-    $("#rsOk").style.display = "block";
-  }
   $("#rsEnviar").addEventListener("click", async () => {
     const para = $("#rsPara").value, texto = $("#rsTexto").value.trim();
     if (!para || !texto) return;
@@ -1668,9 +1799,9 @@ function iniciarApp(DB) {
     b.disabled = true;
     try {
       await CHAT.enviar(para, texto);
-      rsAviso(`Enviado para ${nomePessoa(para)}. Aparece na tela Mensagens dele.`);
+      UI.ok(`Enviado para ${nomePessoa(para)}.`);
     } catch (e) {
-      alert("Não foi possível enviar a mensagem: " + (e.message || e));
+      UI.erro("Não foi possível enviar a mensagem: " + (e.message || e));
     } finally { b.disabled = false; }
   });
 
@@ -1732,7 +1863,7 @@ function iniciarApp(DB) {
     if (!texto || !para) return;
     ta.disabled = true;
     try { await CHAT.enviar(para, texto); ta.value = ""; }
-    catch (e) { alert("Não foi possível enviar a mensagem: " + (e.message || e)); }
+    catch (e) { UI.erro("Não foi possível enviar a mensagem: " + (e.message || e)); }
     finally { ta.disabled = false; ta.focus(); }
   }
   $("#chatForm").addEventListener("submit", e => { e.preventDefault(); enviarChat(); });
@@ -1867,7 +1998,7 @@ function iniciarApp(DB) {
   function salvarProd() {
     const err = $("#prodErr");
     err.style.display = "none";
-    const fail = (msg, el) => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; el?.focus(); return false; };
+    const fail = (msg, el) => { UI.aviso(msg); el?.focus(); return false; };
     const data = $("#lData").value, funcId = $("#lFunc").value, obraId = $("#lObra").value, servicoId = $("#lServ").value;
     const qtd = parseQtd($("#lQtd").value);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return fail("Informe a data.", $("#lData"));
@@ -1891,15 +2022,13 @@ function iniciarApp(DB) {
   }
   $("#formProd").addEventListener("submit", e => {
     e.preventDefault();
-    if (salvarProd()) modalProd.hide();
+    if (salvarProd()) { modalProd.hide(); UI.ok("Produção salva."); }
   });
   $("#btnProdNovo").addEventListener("click", () => {
     const ok = salvarProd();
     if (!ok) return;
     resetProdForm(true);
-    const info = $("#prodOk");
-    info.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${fqu(ok.qtd, ok.un)} de ${esc(ok.nome)} salvo${verValores ? ` (${money(vMO(ok))} de mão de obra)` : ""}. Lance o próximo.`;
-    info.style.display = "block";
+    UI.ok(`${fqu(ok.qtd, ok.un)} de ${ok.nome} salvo${verValores ? ` (${money(vMO(ok))} de mão de obra)` : ""}. Lance o próximo.`);
     $("#lServ").focus();
   });
 
@@ -1947,9 +2076,9 @@ function iniciarApp(DB) {
     e.preventDefault();
     const nome = $("#oNome").value.trim();
     const err = $("#obraErr");
-    if (!nome) { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Informe o nome da obra.`; err.style.display = "block"; return; }
+    if (!nome) return UI.aviso("Informe o nome da obra.");
     if (obras.some(o => o.id !== editObraId && o.nome.toLowerCase() === nome.toLowerCase())) {
-      err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Já existe uma obra com esse nome.`; err.style.display = "block"; return;
+      return UI.aviso("Já existe uma obra com esse nome.");
     }
     const dados = { nome, cliente: $("#oCliente").value.trim(), endereco: $("#oEnd").value.trim(), inicio: $("#oInicio").value, status: $("#oStatus").value };
     let id = editObraId;
@@ -1957,6 +2086,7 @@ function iniciarApp(DB) {
     else { id = uid(); obras.push({ id, ...dados, itens: [], criado: stampNow() }); }
     persist(K.obr, obras);
     modalObra.hide();
+    UI.ok(editObraId ? "Obra atualizada." : "Obra cadastrada.");
     if (!editObraId) abrirObra(id); else renderView(currentView());
   });
 
@@ -2049,15 +2179,16 @@ function iniciarApp(DB) {
   }
   $("#btnPrintMed").addEventListener("click", () => imprimir($("#medicaoPanel")));
   $("#odEditar").addEventListener("click", () => openModalObra(curObraId));
-  $("#odExcluir").addEventListener("click", () => {
+  $("#odExcluir").addEventListener("click", async () => {
     const o = obraById(curObraId);
     if (!o) return;
     const n = lancs.filter(l => l.obraId === o.id).length;
-    if (!confirm(`Excluir a obra "${o.nome}"?` + (n ? `\n\n${plural(n, "lançamento de produção também será excluído", "lançamentos de produção também serão excluídos")} (sai da folha).` : "") + "\n\nEsta ação não pode ser desfeita.")) return;
+    if (!(await UI.confirmar(`Excluir a obra "${o.nome}"?` + (n ? `\n\n${plural(n, "lançamento de produção também será excluído", "lançamentos de produção também serão excluídos")} (sai da folha).` : "") + "\n\nEsta ação não pode ser desfeita.", { titulo: "Excluir obra", botao: "Excluir", perigo: true }))) return;
     obras = obras.filter(x => x.id !== o.id);
     lancs = lancs.filter(l => l.obraId !== o.id);
     persist(K.obr, obras); persist(K.lan, lancs);
     goTo("obras");
+    UI.ok("Obra excluída.");
   });
 
   /* Modal item do orçamento */
@@ -2101,7 +2232,7 @@ function iniciarApp(DB) {
     e.preventDefault();
     const o = obraById(curObraId);
     const err = $("#itemErr");
-    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const fail = msg => { UI.aviso(msg); };
     const servicoId = $("#iServ").value, qtd = parseQtd($("#iQtd").value), preco = getCents($("#iPreco"));
     if (!servicoId) return fail("Selecione o serviço.");
     if (!(qtd > 0)) return fail("Informe a quantidade orçada.");
@@ -2112,19 +2243,21 @@ function iniciarApp(DB) {
     else o.itens.push({ id: uid(), servicoId, nome, un, qtd, preco });
     persist(K.obr, obras);
     modalItem.hide();
+    UI.ok(it ? "Item atualizado." : "Item adicionado ao orçamento.");
     renderObra();
   });
-  $("#odItens").addEventListener("click", e => {
+  $("#odItens").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit-item]");
     const dl = e.target.closest("[data-del-item]");
     if (ed) openModalItem(ed.dataset.editItem);
     if (dl) {
       const o = obraById(curObraId);
       const it = o.itens.find(i => i.id === dl.dataset.delItem);
-      if (!it || !confirm(`Remover "${it.nome}" do orçamento?\n\nA produção já lançada continua, mas passa a ser medida pelo preço do cadastro.`)) return;
+      if (!it || !(await UI.confirmar(`Remover "${it.nome}" do orçamento?\n\nA produção já lançada continua, mas passa a ser medida pelo preço do cadastro.`, { titulo: "Remover item", botao: "Remover", perigo: true }))) return;
       o.itens = o.itens.filter(i => i.id !== it.id);
       persist(K.obr, obras);
       renderObra();
+      UI.ok("Item removido do orçamento.");
     }
   });
 
@@ -2222,7 +2355,7 @@ function iniciarApp(DB) {
     $("#vFunc").value = v ? v.funcId : (lista.length === 1 ? lista[0].id : "");
     $("#vDesc").value = v ? v.desc || "" : "";
     $("#valeErr").style.display = "none";
-    if (!lista.length) { $("#valeErr").innerHTML = `<i class="bi bi-exclamation-triangle"></i> Cadastre um funcionário antes de lançar vales.`; $("#valeErr").style.display = "block"; }
+    if (!lista.length) UI.aviso("Cadastre um funcionário antes de lançar vales.");
     modalVale.show();
   }
   $("#modalVale").addEventListener("shown.bs.modal", () => $("#vValor").focus());
@@ -2230,7 +2363,7 @@ function iniciarApp(DB) {
   $("#formVale").addEventListener("submit", e => {
     e.preventDefault();
     const err = $("#valeErr");
-    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const fail = msg => { UI.aviso(msg); };
     const valor = getCents($("#vValor")), data = $("#vData").value, funcId = $("#vFunc").value;
     if (!(valor > 0)) return fail("Informe o valor do vale.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return fail("Informe a data.");
@@ -2240,18 +2373,20 @@ function iniciarApp(DB) {
     else vales.push({ id: uid(), ...dados, reg: stampNow() });
     persist(K.val, vales);
     modalVale.hide();
+    UI.ok(editValeId ? "Vale atualizado." : "Vale lançado.");
     renderView(currentView());
   });
-  $("#vaBody").addEventListener("click", e => {
+  $("#vaBody").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit-vale]");
     const dl = e.target.closest("[data-del-vale]");
     if (ed) openModalVale(ed.dataset.editVale);
     if (dl) {
       const v = vales.find(x => x.id === dl.dataset.delVale);
-      if (!v || !confirm(`Excluir o vale de ${money(v.valor)} de ${nomeFunc(v.funcId)}?`)) return;
+      if (!v || !(await UI.confirmar(`Excluir o vale de ${money(v.valor)} de ${nomeFunc(v.funcId)}?`, { titulo: "Excluir vale", botao: "Excluir", perigo: true }))) return;
       vales = vales.filter(x => x.id !== v.id);
       persist(K.val, vales);
       renderFolha();
+      UI.ok("Vale excluído.");
     }
   });
 
@@ -2456,7 +2591,7 @@ function iniciarApp(DB) {
   $("#formSrv").addEventListener("submit", e => {
     e.preventDefault();
     const err = $("#srvErr");
-    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const fail = msg => { UI.aviso(msg); };
     const nome = $("#sNome").value.trim(), un = $("#sUn").value, preco = getCents($("#sPreco")), mo = getCents($("#sMo"));
     if (!nome) return fail("Informe o nome do serviço.");
     if (!(mo > 0) && !(preco > 0)) return fail("Informe o valor da mão de obra e/ou o preço ao cliente.");
@@ -2470,20 +2605,22 @@ function iniciarApp(DB) {
     } else srvs.push({ id: uid(), nome, un, preco, mo });
     persist(K.srv, srvs);
     modalSrv.hide();
+    UI.ok(editSrvId ? "Serviço atualizado." : "Serviço cadastrado.");
     renderServicos();
   });
-  $("#sBody").addEventListener("click", e => {
+  $("#sBody").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit-srv]");
     const dl = e.target.closest("[data-del-srv]");
     if (ed) openModalSrv(ed.dataset.editSrv);
     if (dl) {
       const s = srvById(dl.dataset.delSrv);
       if (!s) return;
-      if (obras.some(o => o.itens.some(i => i.servicoId === s.id))) { alert(`"${s.nome}" está no orçamento de uma obra. Remova-o do orçamento antes de excluir.`); return; }
-      if (!confirm(`Excluir o serviço "${s.nome}"?\n\nA produção já lançada com ele não muda.`)) return;
+      if (obras.some(o => o.itens.some(i => i.servicoId === s.id))) return UI.aviso(`"${s.nome}" está no orçamento de uma obra. Remova-o do orçamento antes de excluir.`);
+      if (!(await UI.confirmar(`Excluir o serviço "${s.nome}"?\n\nA produção já lançada com ele não muda.`, { titulo: "Excluir serviço", botao: "Excluir", perigo: true }))) return;
       srvs = srvs.filter(x => x.id !== s.id);
       persist(K.srv, srvs);
       renderServicos();
+      UI.ok("Serviço excluído.");
     }
   });
 
@@ -2525,7 +2662,7 @@ function iniciarApp(DB) {
     e.preventDefault();
     const err = $("#funcErr");
     const nome = $("#fNome").value.trim();
-    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const fail = msg => { UI.aviso(msg); };
     if (!nome) return fail("Informe o nome.");
     if (funcs.some(f => f.id !== editFuncId && f.nome.toLowerCase() === nome.toLowerCase())) return fail("Já existe um funcionário com esse nome.");
     const dados = { nome, funcao: $("#fFuncao").value.trim(), ativo: $("#fAtivo").checked };
@@ -2533,9 +2670,10 @@ function iniciarApp(DB) {
     else funcs.push({ id: uid(), ...dados, criado: stampNow() });
     persist(K.fun, funcs);
     modalFunc.hide();
+    UI.ok(editFuncId ? "Funcionário atualizado." : "Funcionário cadastrado.");
     renderFuncionarios();
   });
-  $("#fBody").addEventListener("click", e => {
+  $("#fBody").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit-func]");
     const dl = e.target.closest("[data-del-func]");
     if (ed) openModalFunc(ed.dataset.editFunc);
@@ -2544,15 +2682,16 @@ function iniciarApp(DB) {
       if (!f) return;
       /* Com produção ou vale lançado, só inativa: a folha antiga continua com o nome */
       if (lancs.some(l => l.funcId === f.id) || vales.some(v => v.funcId === f.id)) {
-        if (f.ativo === false) { alert(`${f.nome} já está inativo e tem lançamentos na folha, por isso não pode ser excluído.`); return; }
-        if (!confirm(`${f.nome} tem produção ou vales lançados e não pode ser excluído.\n\nDeseja marcá-lo como inativo? (some dos lançamentos novos)`)) return;
+        if (f.ativo === false) return UI.aviso(`${f.nome} já está inativo e tem lançamentos na folha, por isso não pode ser excluído.`);
+        if (!(await UI.confirmar(`${f.nome} tem produção ou vales lançados e não pode ser excluído.\n\nDeseja marcá-lo como inativo? (some dos lançamentos novos)`, { titulo: "Inativar funcionário", botao: "Inativar" }))) return;
         f.ativo = false;
       } else {
-        if (!confirm(`Excluir o funcionário "${f.nome}"?`)) return;
+        if (!(await UI.confirmar(`Excluir o funcionário "${f.nome}"?`, { titulo: "Excluir funcionário", botao: "Excluir", perigo: true }))) return;
         funcs = funcs.filter(x => x.id !== f.id);
       }
       persist(K.fun, funcs);
       renderFuncionarios();
+      UI.ok(f.ativo === false && funcs.includes(f) ? "Funcionário inativado." : "Funcionário excluído.");
     }
   });
 
@@ -2586,9 +2725,119 @@ function iniciarApp(DB) {
     applyBrand();
     const c = competencia(today());
     P.prod = { ...c }; P.folha = { ...c }; P.med = { ...c };
-    const res = $("#cfgResult");
-    res.innerHTML = `<div class="a-info"><i class="bi bi-check-circle-fill"></i> Configurações salvas.</div>`;
-    res.style.display = "block";
+    UI.ok("Configurações salvas.");
+  });
+
+  /* ══════════════════════════════════
+     MEU PERFIL (nome e foto em "perfis"; CPF, celular e nascimento em "dados_pessoais", só o dono vê)
+  ══════════════════════════════════ */
+  let fotoNova;                                     /* undefined = não mexeu · "" = remover · data URL = nova */
+  const soDig = v => v.replace(/\D/g, "");
+  const mascCpf = v => soDig(v).slice(0, 11).replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  const mascCel = v => {
+    const d = soDig(v).slice(0, 11);
+    if (d.length <= 2) return d.length ? "(" + d : "";
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+  function cpfValido(c) {
+    c = soDig(c);
+    if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
+    for (const n of [9, 10]) {
+      let s = 0;
+      for (let i = 0; i < n; i++) s += +c[i] * (n + 1 - i);
+      if ((s * 10 % 11) % 10 !== +c[n]) return false;
+    }
+    return true;
+  }
+  $("#pfCpf").addEventListener("input", e => { e.target.value = mascCpf(e.target.value); });
+  $("#pfCel").addEventListener("input", e => { e.target.value = mascCel(e.target.value); });
+
+  const fotoAtual = () => fotoNova === undefined ? DB.perfil.foto : fotoNova;
+  const pintaFotoPerfil = () => pintaAvatar($("#pfFoto"), $("#pfNome").value || DB.perfil.nome || loginTxt(), fotoAtual());
+  const msgOk  = (el, txt) => UI.ok(txt);
+  const msgErr = (el, txt) => txt ? UI.aviso(txt) : null;
+
+  async function renderPerfil() {
+    fotoNova = undefined;
+    const real = !DB.email.endsWith("@adamus.local");
+    $("#pfLoginLbl").textContent = real ? "E-mail" : "Usuário";
+    $("#pfLogin").value = loginTxt();
+    $("#pfNome").value = DB.perfil.nome || "";
+    ["#pfCpf", "#pfCel", "#pfNasc"].forEach(id => { $(id).value = ""; $(id).disabled = true; });
+    ["#pfErr", "#pfOk", "#pwErr", "#pwOk"].forEach(id => { $(id).style.display = "none"; });
+    pintaFotoPerfil();
+    try {
+      const d = await DB.conta.dados();
+      $("#pfCpf").value = d.cpf || "";
+      $("#pfCel").value = d.celular || "";
+      $("#pfNasc").value = d.nascimento || "";
+    } catch (e) { msgErr($("#pfErr"), "Não foi possível carregar CPF, celular e nascimento: " + (e.message || e)); }
+    ["#pfCpf", "#pfCel", "#pfNasc"].forEach(id => { $(id).disabled = false; });
+  }
+  $("#pfNome").addEventListener("input", pintaFotoPerfil);
+
+  /* Foto: recorta o centro e reduz para 256×256 em JPEG (fica ~20 KB) */
+  $("#pfArquivo").addEventListener("change", e => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      const lado = Math.min(img.width, img.height), c = document.createElement("canvas");
+      c.width = c.height = 256;
+      c.getContext("2d").drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, 256, 256);
+      URL.revokeObjectURL(url);
+      fotoNova = c.toDataURL("image/jpeg", 0.85);
+      pintaFotoPerfil();
+      msgOk($("#pfOk"), "Foto pronta. Clique em Salvar Alterações para gravar.");
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); UI.erro("Não foi possível abrir essa imagem."); };
+    img.src = url;
+  });
+  $("#pfRemover").addEventListener("click", () => {
+    fotoNova = "";
+    pintaFotoPerfil();
+    msgOk($("#pfOk"), "Foto removida. Clique em Salvar Alterações para gravar.");
+  });
+
+  $("#formPerfil").addEventListener("submit", async e => {
+    e.preventDefault();
+    const nome = $("#pfNome").value.trim(), cpf = $("#pfCpf").value, celular = $("#pfCel").value;
+    $("#pfOk").style.display = "none";
+    if (!nome) { msgErr($("#pfErr"), "Informe o nome completo."); return $("#pfNome").focus(); }
+    if (cpf && !cpfValido(cpf)) { msgErr($("#pfErr"), "CPF inválido."); return $("#pfCpf").focus(); }
+    if (celular && soDig(celular).length < 10) { msgErr($("#pfErr"), "Celular incompleto."); return $("#pfCel").focus(); }
+    msgErr($("#pfErr"), "");
+    const b = $("#pfSalvar");
+    b.disabled = true;
+    try {
+      await DB.conta.salvar({ nome, foto: fotoAtual() || null, cpf: cpf || null, celular: celular || null, nascimento: $("#pfNasc").value || null });
+      fotoNova = undefined;
+      applyBrand();
+      msgOk($("#pfOk"), "Dados salvos.");
+    } catch (err) {
+      msgErr($("#pfErr"), "Não foi possível salvar: " + (err.message || err));
+    } finally { b.disabled = false; }
+  });
+
+  $("#formSenha").addEventListener("submit", async e => {
+    e.preventDefault();
+    const a = $("#pwNova").value, c = $("#pwConf").value;
+    $("#pwOk").style.display = "none";
+    if (a.length < 6) return msgErr($("#pwErr"), "A senha precisa ter pelo menos 6 caracteres.");
+    if (a !== c) return msgErr($("#pwErr"), "As duas senhas não são iguais.");
+    msgErr($("#pwErr"), "");
+    const b = $("#pwSalvar");
+    b.disabled = true;
+    try {
+      await DB.conta.trocarSenha(a);
+      $("#pwNova").value = $("#pwConf").value = "";
+      msgOk($("#pwOk"), "Senha alterada. Use a nova senha no próximo login.");
+    } catch (err) {
+      msgErr($("#pwErr"), "Não foi possível alterar a senha: " + (err.message || err));
+    } finally { b.disabled = false; }
   });
 
   /* ─── Init ─── */
@@ -2637,16 +2886,12 @@ function iniciarApp(DB) {
     /* Sem "@" é nome de usuário: o Supabase exige e-mail, então vira usuario@adamus.local */
     const login = $("#lgEmail").value.trim().toLowerCase(), password = $("#lgSenha").value;
     const email = login && !login.includes("@") ? login + DOMINIO_USUARIO : login;
-    const err = $("#lgErr");
-    err.style.display = "none";
-    if (!email || !password) { err.textContent = "Informe usuário e senha."; err.style.display = "block"; return; }
+    if (!email || !password) return UI.aviso("Informe usuário e senha.");
     $("#lgBtn").disabled = true;
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       $("#lgBtn").disabled = false;
-      err.textContent = error.message === "Invalid login credentials" ? "Usuário ou senha incorretos." : "Não foi possível entrar: " + error.message;
-      err.style.display = "block";
-      return;
+      return UI.aviso(error.message === "Invalid login credentials" ? "Usuário ou senha incorretos." : "Não foi possível entrar: " + error.message);
     }
     $("#lgSenha").value = "";
     entrar(data.session);
@@ -2678,9 +2923,9 @@ function iniciarApp(DB) {
     Object.keys(TIPO).forEach(k => { try { const v = JSON.parse(localStorage.getItem(k)); if (v) local[k] = v; } catch {} });
     const n = k => (Array.isArray(local[k]) ? local[k].length : 0);
     if (!n("dw_lanc_v1") && !n("dw_obras_v1") && !n("dw_func_v1") && !n("dw_vales_v1")) return [];
-    if (!confirm(`O banco de dados online está vazio e este navegador tem dados salvos:\n\n` +
+    if (!(await UI.confirmar(`O banco de dados online está vazio e este navegador tem dados salvos:\n\n` +
       `${n("dw_obras_v1")} obras · ${n("dw_func_v1")} funcionários · ${n("dw_serv_v1")} serviços\n` +
-      `${n("dw_lanc_v1")} lançamentos · ${n("dw_vales_v1")} vales\n\nEnviar esses dados para o servidor?`)) return [];
+      `${n("dw_lanc_v1")} lançamentos · ${n("dw_vales_v1")} vales\n\nEnviar esses dados para o servidor?`, { titulo: "Importar dados", botao: "Enviar" }))) return [];
     carregando("Enviando dados deste navegador…");
     const linhas = Object.entries(local).flatMap(([k, v]) => comoLinhas(k, v));
     await enviarLinhas(linhas);
@@ -2718,7 +2963,7 @@ function iniciarApp(DB) {
       up.forEach(l => snap[k].delete(l.id));
       del.forEach(id => snap[k].set(id, "?"));
       console.error(e);
-      alert("⚠️ Não foi possível salvar no servidor.\n" + (e.message || e) + "\n\nVerifique a internet. A próxima alteração tenta enviar de novo.");
+      UI.erro((e.message || e) + "\n\nVerifique a internet. A próxima alteração tenta enviar de novo.", "Não foi possível salvar no servidor");
     });
   }
   window.addEventListener("beforeunload", e => { if (pendentes) { e.preventDefault(); e.returnValue = ""; } });
@@ -2735,7 +2980,7 @@ function iniciarApp(DB) {
   }
   async function iniciarChat(uid) {
     chat.eu = uid;
-    const { data: ps, error: e1 } = await sb.from("perfis").select("user_id,nome,papel");
+    const { data: ps, error: e1 } = await sb.from("perfis").select("*");
     if (e1) throw e1;
     const { data, error } = await sb.from("mensagens").select("*").order("id", { ascending: false }).limit(500);
     if (error) throw error;
@@ -2767,7 +3012,7 @@ function iniciarApp(DB) {
     if (iniciado) return;
     try {
       carregando("Carregando dados…");
-      const { data: perfil, error } = await sb.from("perfis").select("nome,papel").eq("user_id", session.user.id).maybeSingle();
+      const { data: perfil, error } = await sb.from("perfis").select("*").eq("user_id", session.user.id).maybeSingle();
       if (error) throw error;
       if (!perfil) { await sb.auth.signOut(); return mostrarLogin("Este usuário não tem acesso liberado. Peça ao administrador."); }
       const admin = perfil.papel === "admin";
@@ -2791,10 +3036,30 @@ function iniciarApp(DB) {
       iniciarApp({
         dados, perfil, email: session.user.email,
         chat,
+        conta: {
+          dados: async () => {
+            const { data, error } = await sb.from("dados_pessoais").select("cpf,celular,nascimento").eq("user_id", session.user.id).maybeSingle();
+            if (error) throw error;
+            return data || {};
+          },
+          salvar: async ({ nome, foto, cpf, celular, nascimento }) => {
+            const { error: e1 } = await sb.from("perfis").update({ nome, foto }).eq("user_id", session.user.id);
+            if (e1) throw e1;
+            const { error: e2 } = await sb.from("dados_pessoais").upsert({ user_id: session.user.id, cpf, celular, nascimento });
+            if (e2) throw e2;
+            Object.assign(perfil, { nome, foto });
+            const eu = chat.pessoas.find(p => p.user_id === session.user.id);
+            if (eu) Object.assign(eu, { nome, foto });
+          },
+          trocarSenha: async password => {
+            const { error } = await sb.auth.updateUser({ password });
+            if (error) throw error;
+          },
+        },
         /* encarregado grava só lançamentos; gestor não grava nada (o banco também barra) */
         salvar: (k, v) => salvar(k, v, !(admin || (perfil.papel === "encarregado" && k === "dw_lanc_v1"))),
         sair: async () => {
-          if (pendentes && !confirm("Ainda há alterações sendo salvas. Sair mesmo assim?")) return;
+          if (pendentes && !(await UI.confirmar("Ainda há alterações sendo salvas. Sair mesmo assim?", { titulo: "Sair", botao: "Sair", perigo: true }))) return;
           await sb.auth.signOut();
           location.reload();
         },
