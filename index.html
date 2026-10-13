@@ -3008,6 +3008,7 @@ function iniciarApp(DB) {
 
   /* ─── Entrada: perfil → dados → sistema ─── */
   let iniciado = false;
+  let temDados = false;          /* usuário já tem linha em dados_pessoais */
   async function entrar(session) {
     if (iniciado) return;
     try {
@@ -3037,16 +3038,22 @@ function iniciarApp(DB) {
         dados, perfil, email: session.user.email,
         chat,
         conta: {
+          /* Campos opcionais: sem a tabela (SQL 03 não aplicado) ou sem cadastro, só ficam vazios */
           dados: async () => {
             const { data, error } = await sb.from("dados_pessoais").select("cpf,celular,nascimento").eq("user_id", session.user.id).maybeSingle();
-            if (error) throw error;
+            if (error) { console.warn("dados_pessoais:", error.message); temDados = false; return {}; }
+            temDados = !!data;
             return data || {};
           },
           salvar: async ({ nome, foto, cpf, celular, nascimento }) => {
             const { error: e1 } = await sb.from("perfis").update({ nome, foto }).eq("user_id", session.user.id);
             if (e1) throw e1;
-            const { error: e2 } = await sb.from("dados_pessoais").upsert({ user_id: session.user.id, cpf, celular, nascimento });
-            if (e2) throw e2;
+            /* só grava dados pessoais se algum foi preenchido ou se já havia cadastro (para poder limpar) */
+            if (cpf || celular || nascimento || temDados) {
+              const { error: e2 } = await sb.from("dados_pessoais").upsert({ user_id: session.user.id, cpf, celular, nascimento });
+              if (e2) throw e2;
+              temDados = true;
+            }
             Object.assign(perfil, { nome, foto });
             const eu = chat.pessoas.find(p => p.user_id === session.user.id);
             if (eu) Object.assign(eu, { nome, foto });
