@@ -293,6 +293,24 @@
     .form-switch .form-check-input:checked{background-color:var(--accent);border-color:var(--accent);}
     .form-switch .form-check-label{padding-left:8px;padding-top:3px;font-weight:600;cursor:pointer;}
 
+    /* Login (Supabase) */
+    .login{position:fixed;inset:0;z-index:3000;background:var(--bg);display:grid;place-items:center;padding:16px;overflow-y:auto;}
+    body.logado .login{display:none;}
+    .login-card{width:100%;max-width:380px;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;}
+    .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+    .login-brand svg{width:48px;height:48px;flex-shrink:0;}
+    .login-msg{font-size:13.5px;color:var(--text-muted);margin:0 0 16px;}
+
+    /* Gestor: só consulta, sem botões de lançar / editar / excluir */
+    body.leitura [data-nova-prod],body.leitura [data-novo-vale],body.leitura #btnNovaObra,body.leitura #btnNovoItem,
+    body.leitura #odEditar,body.leitura #odExcluir,body.leitura #btnNovoSrv,body.leitura #btnNovoFunc,
+    body.leitura .btn-act,body.leitura .nav-item[data-view="config"]{display:none!important;}
+
+    /* Situação da gravação no servidor */
+    .sync-st{font-size:18px;color:var(--text-dim);display:grid;place-items:center;width:32px;}
+    .sync-st.salvando{color:var(--warn);}
+    .sync-st.erro{color:var(--danger);}
+
     /* Valores em R$ embaçados (botão do olho na barra superior) */
     .mv{transition:filter .2s;}
     body.ocultar .mv{filter:blur(7px);user-select:none;}
@@ -322,6 +340,32 @@
   </style>
 </head>
 <body>
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="login-brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><clipPath id="loginClip"><circle cx="16" cy="16" r="15"/></clipPath><circle cx="16" cy="16" r="15" fill="#2b3f9e"/><g clip-path="url(#loginClip)" stroke="#fff" stroke-linecap="square" fill="none"><path d="M8.4 32 27.6 0" stroke-width="2.6"/><path d="M20.7 11.5H32M15.9 19.5H32M20.7 11.5 32 21M15.9 19.5 27 33" stroke-width="1.7"/></g></svg>
+      <div>
+        <div class="brand-title"><span>ADAMUS</span></div>
+        <div class="brand-sub">DRYWALL</div>
+      </div>
+    </div>
+    <p class="login-msg" id="loginMsg"><span class="spinner-border spinner-border-sm me-2"></span>Carregando…</p>
+    <form id="formLogin" novalidate hidden>
+      <div class="mb-3">
+        <label class="form-label" for="lgEmail">E-mail</label>
+        <input type="email" class="form-control" id="lgEmail" autocomplete="username" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="lgSenha">Senha</label>
+        <input type="password" class="form-control" id="lgSenha" autocomplete="current-password" />
+      </div>
+      <div id="lgErr" class="a-warn mb-3" style="display:none;"></div>
+      <button type="submit" class="btn btn-accent w-100" id="lgBtn"><i class="bi bi-box-arrow-in-right"></i> Entrar</button>
+    </form>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- SIDEBAR -->
@@ -347,7 +391,8 @@
     <div class="nav-item" data-view="config"><i class="bi bi-gear"></i> Configurações</div>
     <div class="sidebar-footer">
       <div class="avatar" id="avatarSide">D</div>
-      <div class="info"><b id="userNome">Responsável</b><br /><small>GESTOR DE OBRAS</small></div>
+      <div class="info"><b id="userNome">Responsável</b><br /><small id="userPapel">GESTOR DE OBRAS</small></div>
+      <button class="icon-btn" id="btnSair" title="Sair" style="width:34px;height:34px;flex-shrink:0"><i class="bi bi-box-arrow-right"></i></button>
       <button class="icon-btn" id="themeBtnSide" title="Alternar tema" style="width:34px;height:34px;flex-shrink:0">
         <i class="bi bi-brightness-high"></i>
       </button>
@@ -366,6 +411,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <span class="sync-st" id="syncSt" title="Dados salvos no servidor"><i class="bi bi-cloud-check"></i></span>
         <button class="icon-btn" id="olhoBtn" title="Mostrar / esconder valores"><i class="bi bi-eye-slash"></i></button>
         <button class="icon-btn" id="themeBtn" title="Alternar tema"><i class="bi bi-brightness-high"></i></button>
         <div class="avatar" id="avatarTop" style="cursor:default;">D</div>
@@ -1068,22 +1114,16 @@
 </div>
 
 <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="vendor/supabase/supabase.min.js"></script>
 <script>
-(function () {
+/* Monta o sistema depois do login, com os dados já baixados do Supabase (ver script seguinte) */
+function iniciarApp(DB) {
   "use strict";
 
   /* ─── Storage ─── */
   const K = { obr: "dw_obras_v1", srv: "dw_serv_v1", fun: "dw_func_v1", lan: "dw_lanc_v1", val: "dw_vales_v1", cfg: "dw_cfg_v1", theme: "dw_theme" };
-  const load    = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; } };
-  const persist = (k, v) => {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch (e) {
-      if (e.name === "QuotaExceededError") {
-        alert("⚠️ Armazenamento local cheio.\nNão foi possível salvar os dados.");
-      }
-    }
-  };
+  const load    = (k, def) => DB.dados[k] ?? def;
+  const persist = (k, v) => DB.salvar(k, v);
 
   /*
     Serviço:     { id, nome, un, preco:<centavos/un cobrado do cliente>, mo:<centavos/un pago ao funcionário> }
@@ -1260,8 +1300,9 @@
     return (h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite") + (nome ? ", " + nome + "!" : "!");
   }
   function applyBrand() {
-    $("#userNome").textContent  = cfg.responsavel.trim() || "Responsável";
-    const ini = (cfg.responsavel.trim() || cfg.empresa.trim() || "D")[0].toUpperCase();
+    const nome = DB.perfil.nome || cfg.responsavel.trim() || DB.email;
+    $("#userNome").textContent  = nome;
+    const ini = (nome || "A")[0].toUpperCase();
     $("#avatarSide").textContent = ini;
     $("#avatarTop").textContent  = ini;
   }
@@ -2420,8 +2461,173 @@
   });
 
   /* ─── Init ─── */
+  document.body.classList.toggle("leitura", DB.perfil.papel !== "admin");
+  $("#userPapel").textContent = DB.perfil.papel === "admin" ? "ADMIN" : "GESTOR";
+  $("#btnSair").addEventListener("click", DB.sair);
   applyBrand();
   goTo("dashboard");
+}
+</script>
+<script>
+/* ══════════════════════════════════
+   SUPABASE: login, download dos dados e gravação
+   Cada obra / serviço / funcionário / lançamento / vale é uma linha em "registros"
+   (id, tipo, dados jsonb); a configuração é a linha id "config".
+   Admin grava; gestor só lê (garantido pelas regras RLS do banco).
+══════════════════════════════════ */
+(function () {
+  "use strict";
+  const SUPABASE_URL = "https://drwrzavxrosxfgysgdxe.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_DkVhXy2VYZcFbE1xEmkavw_dV8Qn9v4";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const TIPO  = { dw_obras_v1: "obra", dw_serv_v1: "servico", dw_func_v1: "funcionario", dw_lanc_v1: "lancamento", dw_vales_v1: "vale", dw_cfg_v1: "config" };
+  const CHAVE = Object.fromEntries(Object.entries(TIPO).map(([k, t]) => [t, k]));
+  const LOTE  = 500;
+  const $ = s => document.querySelector(s);
+
+  /* ─── Tela de login ─── */
+  function mostrarLogin(msg) {
+    $("#loginMsg").textContent = msg || "Entre com seu e-mail e senha.";
+    $("#formLogin").hidden = false;
+    $("#lgBtn").disabled = false;
+    setTimeout(() => $("#lgEmail").focus(), 50);
+  }
+  function carregando(txt) {
+    $("#formLogin").hidden = true;
+    $("#loginMsg").innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${txt}`;
+  }
+  $("#formLogin").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("#lgEmail").value.trim(), password = $("#lgSenha").value;
+    const err = $("#lgErr");
+    err.style.display = "none";
+    if (!email || !password) { err.textContent = "Informe e-mail e senha."; err.style.display = "block"; return; }
+    $("#lgBtn").disabled = true;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      $("#lgBtn").disabled = false;
+      err.textContent = error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : "Não foi possível entrar: " + error.message;
+      err.style.display = "block";
+      return;
+    }
+    $("#lgSenha").value = "";
+    entrar(data.session);
+  });
+
+  /* ─── Download (o servidor entrega no máximo 1000 linhas por vez) ─── */
+  async function baixarTudo() {
+    const rows = [];
+    for (let de = 0; ; de += 1000) {
+      const { data, error } = await sb.from("registros").select("id,tipo,dados").order("id").range(de, de + 999);
+      if (error) throw error;
+      rows.push(...data);
+      if (data.length < 1000) return rows;
+    }
+  }
+  async function enviarLinhas(linhas) {
+    for (let i = 0; i < linhas.length; i += LOTE) {
+      const { error } = await sb.from("registros").upsert(linhas.slice(i, i + LOTE));
+      if (error) throw error;
+    }
+  }
+  const comoLinhas = (k, v) => TIPO[k] === "config"
+    ? [{ id: "config", tipo: "config", dados: v }]
+    : (v || []).map(x => ({ id: x.id, tipo: TIPO[k], dados: x }));
+
+  /* Banco vazio + dados antigos neste navegador (localStorage) → oferece enviar uma vez */
+  async function talvezImportar() {
+    const local = {};
+    Object.keys(TIPO).forEach(k => { try { const v = JSON.parse(localStorage.getItem(k)); if (v) local[k] = v; } catch {} });
+    const n = k => (Array.isArray(local[k]) ? local[k].length : 0);
+    if (!n("dw_lanc_v1") && !n("dw_obras_v1") && !n("dw_func_v1") && !n("dw_vales_v1")) return [];
+    if (!confirm(`O banco de dados online está vazio e este navegador tem dados salvos:\n\n` +
+      `${n("dw_obras_v1")} obras · ${n("dw_func_v1")} funcionários · ${n("dw_serv_v1")} serviços\n` +
+      `${n("dw_lanc_v1")} lançamentos · ${n("dw_vales_v1")} vales\n\nEnviar esses dados para o servidor?`)) return [];
+    carregando("Enviando dados deste navegador…");
+    const linhas = Object.entries(local).flatMap(([k, v]) => comoLinhas(k, v));
+    await enviarLinhas(linhas);
+    return linhas;
+  }
+
+  /* ─── Gravação: compara com o último estado enviado e manda só o que mudou ─── */
+  const snap = {};                      /* chave → Map(id → JSON enviado) */
+  let fila = Promise.resolve(), pendentes = 0, falhou = false;
+  function status() {
+    const el = $("#syncSt");
+    el.className = "sync-st" + (falhou ? " erro" : pendentes ? " salvando" : "");
+    el.innerHTML = `<i class="bi ${falhou ? "bi-cloud-slash" : pendentes ? "bi-cloud-arrow-up" : "bi-cloud-check"}"></i>`;
+    el.title = falhou ? "Erro ao salvar no servidor" : pendentes ? "Salvando…" : "Dados salvos no servidor";
+  }
+  function salvar(k, v, somenteLeitura) {
+    if (somenteLeitura || !TIPO[k]) return;
+    const linhas = comoLinhas(k, v);
+    const atual = new Map(linhas.map(l => [l.id, JSON.stringify(l.dados)]));
+    const antes = snap[k] || new Map();
+    const up  = linhas.filter(l => antes.get(l.id) !== atual.get(l.id));
+    const del = [...antes.keys()].filter(id => !atual.has(id));
+    snap[k] = atual;
+    if (!up.length && !del.length) return;
+    pendentes++; status();
+    fila = fila.then(async () => {
+      await enviarLinhas(up);
+      for (let i = 0; i < del.length; i += 200) {
+        const { error } = await sb.from("registros").delete().in("id", del.slice(i, i + 200));
+        if (error) throw error;
+      }
+    }).then(() => { pendentes--; falhou = false; status(); }, e => {
+      pendentes--; falhou = true; status();
+      /* na próxima gravação tenta de novo o que não foi */
+      up.forEach(l => snap[k].delete(l.id));
+      del.forEach(id => snap[k].set(id, "?"));
+      console.error(e);
+      alert("⚠️ Não foi possível salvar no servidor.\n" + (e.message || e) + "\n\nVerifique a internet. A próxima alteração tenta enviar de novo.");
+    });
+  }
+  window.addEventListener("beforeunload", e => { if (pendentes) { e.preventDefault(); e.returnValue = ""; } });
+
+  /* ─── Entrada: perfil → dados → sistema ─── */
+  let iniciado = false;
+  async function entrar(session) {
+    if (iniciado) return;
+    try {
+      carregando("Carregando dados…");
+      const { data: perfil, error } = await sb.from("perfis").select("nome,papel").eq("user_id", session.user.id).maybeSingle();
+      if (error) throw error;
+      if (!perfil) { await sb.auth.signOut(); return mostrarLogin("Este usuário não tem acesso liberado. Peça ao administrador."); }
+      const admin = perfil.papel === "admin";
+      let rows = await baixarTudo();
+      if (!rows.length && admin) rows = await talvezImportar();
+
+      const dados = { dw_cfg_v1: {} };
+      Object.keys(TIPO).forEach(k => { if (k !== "dw_cfg_v1") dados[k] = []; });
+      rows.forEach(r => {
+        const k = CHAVE[r.tipo];
+        if (!k) return;
+        if (r.tipo === "config") dados[k] = r.dados; else dados[k].push(r.dados);
+      });
+      /* sem nenhum serviço no banco o sistema cria os padrão */
+      if (!rows.some(r => r.tipo === "servico")) delete dados.dw_serv_v1;
+      Object.keys(TIPO).forEach(k => { snap[k] = new Map(dados[k] ? comoLinhas(k, dados[k]).map(l => [l.id, JSON.stringify(l.dados)]) : []); });
+
+      iniciado = true;
+      document.body.classList.add("logado");
+      iniciarApp({
+        dados, perfil, email: session.user.email,
+        salvar: (k, v) => salvar(k, v, !admin),
+        sair: async () => {
+          if (pendentes && !confirm("Ainda há alterações sendo salvas. Sair mesmo assim?")) return;
+          await sb.auth.signOut();
+          location.reload();
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      mostrarLogin("Erro ao carregar os dados: " + (e.message || e) + ". Verifique a internet e tente de novo.");
+    }
+  }
+
+  sb.auth.getSession().then(({ data }) => data.session ? entrar(data.session) : mostrarLogin());
 })();
 </script>
 </body>
