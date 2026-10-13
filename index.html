@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Define o tema ANTES do CSS para evitar flash de layout incorreto -->
+  <script>
+    (function(){
+      try{document.documentElement.setAttribute("data-theme",localStorage.getItem("dw_theme")==="light"?"light":"dark");}catch(e){}
+    })();
+  </script>
+  <title>Adamus Drywall · Folha de Obras</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link href="vendor/bootstrap/bootstrap.min.css" rel="stylesheet" />
+  <link href="vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    /*
+      Tema escuro definido em :root como padrão absoluto.
+      O tema claro apenas sobrescreve via [data-theme="light"].
+      --bar: cor das barras do gráfico, validada por tema (contraste >= 3:1 com o card).
+    */
+    :root {
+      --accent:#5677e8; --accent-hover:#4463d6; --accent-rgb:86,119,232; --brand:#2b3f9e; --danger:#ef4444; --warn:#f59e0b;
+      color-scheme:dark;
+      --bg:#0a0d16; --bg-sidebar:#0d111d; --bg-card:#121828; --bg-card-hover:#182036;
+      --bg-input:#0f1422; --border:#1f2940; --text:#e6ebf5; --text-muted:#8089a0;
+      --text-dim:#59617a; --topbar:#0a0d16; --row-hover:#182036;
+      --bar:#4a6be0; --bar-hover:#6b8af0; --grid:#1f2940;
+    }
+    [data-theme="light"] {
+      color-scheme:light;
+      --accent:#2b3f9e; --accent-hover:#22337f; --accent-rgb:43,63,158;
+      --bg:#f1f5f9; --bg-sidebar:#ffffff; --bg-card:#ffffff; --bg-card-hover:#f8fafc;
+      --bg-input:#ffffff; --border:#e2e8f0; --text:#1e293b; --text-muted:#64748b;
+      --text-dim:#94a3b8; --topbar:#ffffff; --row-hover:#f8fafc;
+      --bar:#2b3f9e; --bar-hover:#22337f; --grid:#e2e8f0;
+    }
+
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;transition:background .25s,color .25s;}
+
+    .app{display:flex;min-height:100vh;}
+
+    /* Sidebar */
+    .sidebar{width:250px;flex-shrink:0;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;position:sticky;top:0;height:100vh;transition:background .25s,transform .25s;overflow-y:auto;}
+    .brand{display:flex;align-items:center;gap:12px;padding:4px 22px 22px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .brand .logo{width:42px;height:42px;flex-shrink:0;display:block;}
+    .brand-title{font-weight:800;font-size:20px;letter-spacing:.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;}
+    .brand-title span{color:var(--accent);}
+    .brand-sub{font-size:10.5px;color:var(--text-muted);letter-spacing:4.2px;margin-top:2px;}
+    .nav-section{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);padding:16px 22px 8px;font-weight:600;}
+    .nav-item{display:flex;align-items:center;gap:13px;padding:11px 22px;color:var(--text-muted);cursor:pointer;font-size:14.5px;border-left:3px solid transparent;transition:all .15s;user-select:none;}
+    .nav-item i{font-size:17px;}
+    .nav-item:hover{background:var(--bg-card-hover);color:var(--text);}
+    .nav-item.active{background:var(--bg-card);color:var(--text);border-left-color:var(--accent);font-weight:600;}
+    .nav-item.active i{color:var(--accent);}
+    .sidebar-footer{margin-top:auto;padding:16px 22px 4px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;flex-shrink:0;font-size:15px;}
+    .sidebar-footer .info{line-height:1.2;flex:1;min-width:0;overflow:hidden;}
+    .sidebar-footer .info b{font-size:14px;white-space:nowrap;}
+    .sidebar-footer .info small{color:var(--text-dim);font-size:10px;letter-spacing:.5px;}
+
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+    .topbar{height:66px;background:var(--topbar);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:20;transition:background .25s;}
+    .topbar h1{font-size:20px;margin:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .topbar .sub{font-size:12.5px;color:var(--text-muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .topbar-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+    .icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);display:grid;place-items:center;cursor:pointer;font-size:17px;transition:all .15s;}
+    .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+    .menu-toggle{display:none;}
+    .content{padding:26px;}
+
+    /* Panels */
+    .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:22px;}
+    .panel-title{font-size:16px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:9px;}
+    .panel-title i{color:var(--accent);}
+    .panel-sub{font-size:12.5px;color:var(--text-muted);margin:0;}
+
+    /* Dashboard system cards */
+    .system-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;cursor:pointer;transition:all .18s;height:100%;}
+    .system-card:hover{background:var(--bg-card-hover);border-color:var(--accent);transform:translateY(-2px);}
+    .sc-ic{width:46px;height:46px;border-radius:11px;background:rgba(var(--accent-rgb),.12);color:var(--accent);display:grid;place-items:center;font-size:22px;margin-bottom:16px;}
+    .system-card h5{font-weight:700;margin:0 0 6px;}
+    .system-card p{font-size:13px;color:var(--text-muted);margin:0 0 18px;}
+    .system-card .go{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text-muted);border-top:1px solid var(--border);padding-top:14px;}
+
+    /* Inputs */
+    .form-control,.form-select{background-color:var(--bg-input)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:9px;}
+    .form-control:focus,.form-select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 .2rem rgba(var(--accent-rgb),.18)!important;}
+    .form-control::placeholder{color:var(--text-dim)!important;}
+    label.form-label{font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:6px;}
+    .money-input{font-size:22px;font-weight:700;}
+
+    /* Buttons */
+    .btn-accent{background:var(--accent);border:none;color:#fff;font-weight:600;border-radius:9px;padding:10px 20px;transition:background .15s;cursor:pointer;}
+    .btn-accent:hover{background:var(--accent-hover);color:#fff;}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:9px;padding:10px 18px;font-weight:600;cursor:pointer;}
+    .btn-ghost:hover{color:var(--text);border-color:var(--accent);}
+    .btn-cta{width:100%;padding:16px 20px;font-size:16px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:10px;}
+
+    /* Tables */
+    .table-wrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;overflow-x:auto;}
+    table.grid{width:100%;border-collapse:collapse;min-width:480px;}
+    table.grid thead th{background:var(--bg-input);color:var(--text-dim);font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+    table.grid tbody td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+    table.grid tbody tr:last-child td{border-bottom:none;}
+    table.grid tbody tr:hover{background:var(--row-hover);}
+    table.grid .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+    table.grid tr.day-row td{background:var(--bg-input);font-size:12.5px;font-weight:700;color:var(--text-muted);padding:9px 16px;}
+    .day-flex{display:flex;justify-content:space-between;gap:10px;}
+    .day-flex .v{font-variant-numeric:tabular-nums;white-space:nowrap;}
+    table.grid tr.day-row:hover{background:transparent;}
+    table.grid tr.click-row{cursor:pointer;}
+    table.grid tr.total-row td{font-weight:700;background:var(--bg-input);}
+    table.grid.fit{min-width:0;}
+    .empty{text-align:center;padding:40px 16px;color:var(--text-dim);font-size:14px;}
+    .empty i{font-size:34px;display:block;margin-bottom:10px;opacity:.5;}
+    .sub-line{display:block;font-size:12px;color:var(--text-muted);margin-top:3px;}
+    .sub-line i{color:var(--text-dim);}
+
+    /* Badges */
+    .badge-soft{padding:3px 11px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+    .badge-count{background:rgba(var(--accent-rgb),.14);color:var(--accent);}
+    .badge-pag{background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);}
+    .st-andamento{background:rgba(var(--accent-rgb),.14);color:var(--accent);}
+    .st-pausada{background:rgba(245,158,11,.14);color:var(--warn);}
+    .st-concluida{background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);}
+    .st-inativo{background:rgba(239,68,68,.1);color:var(--danger);}
+
+    /* Barra de progresso (execução) */
+    .prog{height:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:20px;overflow:hidden;min-width:60px;}
+    .prog > span{display:block;height:100%;background:var(--accent);border-radius:20px;}
+    .prog.over > span{background:var(--warn);}
+    .prog-line{display:flex;align-items:center;gap:10px;}
+    .prog-line .prog{flex:1;}
+    .prog-line .p{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:44px;text-align:right;}
+
+    /* Action buttons */
+    .btn-act{background:transparent;border:1px solid transparent;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:14px;transition:all .15s;color:var(--text-dim);}
+    .btn-act:hover{border-color:var(--border);color:var(--text);}
+    .btn-act.del:hover{color:var(--danger);border-color:var(--danger);background:rgba(239,68,68,.08);}
+    .btn-act.edit:hover{color:var(--accent);border-color:var(--accent);background:rgba(var(--accent-rgb),.08);}
+
+    /* Stat cards */
+    .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;height:100%;}
+    .stat .n{font-size:26px;font-weight:700;line-height:1.1;margin-bottom:4px;font-variant-numeric:tabular-nums;word-break:break-word;}
+    .stat .l{font-size:13px;color:var(--text-muted);}
+    .stat .s{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+    /* Seletor de período (‹ mês ano ›): sempre numa linha só */
+    .period{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;}
+    .period .icon-btn{flex-shrink:0;}
+    .period .form-select{width:auto;min-width:0;}
+    .period .sel-mes{flex:1 1 140px;max-width:180px;}
+    .period .sel-ano{flex:0 1 96px;}
+    .period-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+    .period-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .period-lbl{font-size:12.5px;color:var(--text-muted);}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;}
+    .filters .form-select{flex:1 1 200px;max-width:320px;}
+
+    /* Gráfico anual */
+    .chart-box{position:relative;width:100%;}
+    .chart-box svg{display:block;width:100%;height:auto;overflow:visible;}
+    .chart-box .tick{fill:var(--text-dim);font-size:11px;}
+    .chart-box .xlab{fill:var(--text-muted);font-size:11.5px;}
+    .chart-box .xlab.cur{fill:var(--text);font-weight:700;}
+    .chart-box .dlab{fill:var(--text);font-size:11.5px;font-weight:700;}
+    .chart-box .gridline{stroke:var(--grid);stroke-width:1;}
+    .chart-box .baseline{stroke:var(--text-dim);stroke-width:1;}
+    .chart-box .bar{fill:var(--bar);transition:fill .12s;}
+    .chart-box .col.hover .bar{fill:var(--bar-hover);}
+    .chart-box .hit{fill:transparent;cursor:pointer;}
+    .chart-tip{position:absolute;pointer-events:none;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap;line-height:1.45;display:none;z-index:5;}
+    .chart-tip b{display:block;font-size:15px;margin-top:2px;font-variant-numeric:tabular-nums;}
+    .chart-tip small{color:var(--text-muted);}
+
+    /* Modals */
+    .modal-content{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;color:var(--text);}
+    .modal-header{border-bottom:1px solid var(--border);padding:20px 22px 16px;}
+    .modal-header .modal-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:9px;}
+    .modal-header .modal-title i{color:var(--accent);}
+    .modal-header .btn-close{filter:invert(1);opacity:.5;}
+    [data-theme="light"] .modal-header .btn-close{filter:none;}
+    .modal-body{padding:22px;}
+    .modal-footer{border-top:1px solid var(--border);padding:16px 22px 20px;gap:8px;}
+    .modal-backdrop.show{opacity:.6;}
+    /* O <form> envolve corpo e rodapé: precisa repassar o layout em coluna do Bootstrap,
+       senão o corpo não rola e os botões ficam fora da tela */
+    .modal-dialog-scrollable .modal-content > form{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;}
+    .modal-dialog-scrollable .modal-content > form > .modal-body{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    @media(max-width:575.98px){
+      .modal-fullscreen-sm-down .modal-content{border-radius:0;border:none;}
+      .modal-fullscreen-sm-down .modal-header{padding:14px 16px 12px;}
+      .modal-fullscreen-sm-down .modal-body{padding:16px;}
+      .modal-fullscreen-sm-down .modal-footer{padding:10px 16px calc(12px + env(safe-area-inset-bottom));flex-wrap:nowrap;}
+      .modal-fullscreen-sm-down .modal-footer .btn{flex:1;white-space:nowrap;padding:12px 10px;margin:0;}
+    }
+
+    /* Inline alerts */
+    .a-warn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:9px;padding:10px 14px;font-size:13px;}
+    .a-info{background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.3);color:var(--accent);border-radius:9px;padding:10px 14px;font-size:13px;}
+    .a-info a,.a-warn a{color:inherit;font-weight:700;cursor:pointer;}
+
+    /* Danger zone */
+
+    /* Views */
+    .view{display:none;}
+    .view.active{display:block;animation:fadeIn .15s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+    /* Mobile backdrop */
+    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:30;}
+
+    @media(max-width:900px){
+      .sidebar{position:fixed;z-index:40;transform:translateX(-100%);box-shadow:4px 0 30px rgba(0,0,0,.4);}
+      .sidebar.open{transform:translateX(0);}
+      .menu-toggle{display:grid;}
+      .backdrop.show{display:block;}
+    }
+    @media(max-width:576px){
+      .content{padding:14px;}
+      .topbar{padding:0 14px;}
+      .panel{padding:16px;}
+      .stat{padding:16px;}
+      table.grid thead th{padding:10px;}
+      table.grid tbody td{padding:11px 10px;font-size:13.5px;}
+      table.grid tr.day-row td{padding:8px 10px;}
+      .period-actions{width:100%;}
+      .period-actions .btn{flex:1;white-space:nowrap;padding:10px 12px;}
+      .stat .n{font-size:19px;white-space:nowrap;}
+      .stat > i{display:none;}
+      .act-cell .btn-act{display:block;width:32px;height:32px;margin:2px 0 2px auto;}
+      .hide-sm{display:none;}
+    }
+    @media(max-width:420px){ .hide-xs{display:none;} }
+
+    /* Campo de dinheiro com prefixo R$ */
+    .money-group{position:relative;}
+    .money-group .pre{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-weight:600;pointer-events:none;}
+    .money-group .form-control{padding-left:42px;text-align:right;font-variant-numeric:tabular-nums;}
+    .money-group .money-input{padding-left:48px;}
+    .money-group .pre.lg{font-size:18px;}
+    /* Campo de quantidade com unidade (m², ml…) à direita */
+    .qtd-group{position:relative;}
+    .qtd-group .suf{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-weight:700;pointer-events:none;}
+    .qtd-group .form-control{padding-right:52px;text-align:right;font-variant-numeric:tabular-nums;}
+    .qtd-group .money-input{font-size:22px;}
+
+    /* Demonstrativo */
+    .calc{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .calc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);font-size:14px;}
+    .calc-row:last-child{border-bottom:none;}
+    .calc-row .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;}
+    .calc-row.minus .v{color:var(--text-muted);}
+    .calc-row.sub{background:var(--bg-input);font-weight:700;}
+    .calc-row.total{background:rgba(var(--accent-rgb),.1);font-weight:700;font-size:16px;}
+    .calc-row.total .v{color:var(--accent);font-size:20px;}
+    .calc-row.neg .v{color:var(--danger);}
+    .calc-head{padding:8px 16px;font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:var(--text-dim);background:var(--bg-input);border-bottom:1px solid var(--border);}
+    .calc.compact .calc-head{padding:6px 12px;}
+    .calc.compact .calc-row{padding:8px 12px;font-size:13px;}
+    .calc.compact .calc-row.total{font-size:14px;}
+    .calc.compact .calc-row.total .v{font-size:17px;}
+    .hint{font-size:12.5px;color:var(--text-dim);}
+    .hint a{color:var(--accent);cursor:pointer;}
+    .val-cell small{display:block;font-size:12px;font-weight:500;color:var(--text-muted);}
+
+    /* Detalhe da folha por funcionário */
+    tr.det-row{display:none;}
+    tr.det-row.open{display:table-row;}
+    tr.det-row td{background:var(--bg-input);padding:10px 16px 14px!important;}
+    tr.det-row:hover{background:transparent!important;}
+    .det-line{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+    .det-line:last-child{border-bottom:none;}
+    .det-line .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;}
+    .det-line.minus .v{color:var(--danger);}
+    .det-head{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:var(--text-dim);margin:6px 0 2px;}
+    .chev{transition:transform .15s;color:var(--text-dim);margin-right:6px;}
+    tr.click-row.open .chev{transform:rotate(90deg);}
+
+    /* Cabeçalho da obra */
+    .obra-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+    .obra-head h2{font-size:20px;font-weight:700;margin:0 0 4px;}
+    .obra-meta{font-size:13px;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;}
+    .obra-list-item{display:block;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+    .obra-list-item:last-child{border-bottom:none;}
+    .obra-list-item .top{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:6px;}
+
+    .print-only{display:none;}
+    .form-switch .form-check-input{width:3em;height:1.6em;cursor:pointer;background-color:var(--bg-input);border-color:var(--border);}
+    .form-switch .form-check-input:checked{background-color:var(--accent);border-color:var(--accent);}
+    .form-switch .form-check-label{padding-left:8px;padding-top:3px;font-weight:600;cursor:pointer;}
+
+    /* Valores em R$ embaçados (botão do olho na barra superior) */
+    .mv{transition:filter .2s;}
+    body.ocultar .mv{filter:blur(7px);user-select:none;}
+
+    /* Impressão: imprime só o painel marcado com .printing (folha / boletim de medição) */
+    @media print{
+      :root,[data-theme]{
+        color-scheme:light;
+        --bg:#fff; --bg-card:#fff; --bg-input:#f1f5f9; --border:#cbd5e1; --text:#000;
+        --text-muted:#334155; --text-dim:#475569; --accent:#2b3f9e; --accent-rgb:43,63,158; --row-hover:transparent;
+      }
+      body{background:#fff;}
+      body.ocultar .mv{filter:none;}
+      .sidebar,.topbar,.backdrop,.modal,.modal-backdrop{display:none!important;}
+      .content{padding:0;}
+      body.print-mode .view.active > :not(.printing){display:none!important;}
+      .printing{border:none!important;padding:0!important;}
+      .printing .no-print{display:none!important;}
+      .printing .print-only{display:block;}
+      .printing tr.det-row{display:table-row!important;}
+      .printing .hide-sm,.printing .hide-xs{display:table-cell!important;}
+      .table-wrap{overflow:visible;border-radius:0;}
+      table.grid{min-width:0;}
+      table.grid tbody td,table.grid thead th{padding:6px 8px;font-size:12px;}
+      tr{page-break-inside:avoid;}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><clipPath id="logoClip"><circle cx="16" cy="16" r="15"/></clipPath><circle cx="16" cy="16" r="15" fill="#2b3f9e"/><g clip-path="url(#logoClip)" stroke="#fff" stroke-linecap="square" fill="none"><path d="M8.4 32 27.6 0" stroke-width="2.6"/><path d="M20.7 11.5H32M15.9 19.5H32M20.7 11.5 32 21M15.9 19.5 27 33" stroke-width="1.7"/></g></svg>
+      <div style="min-width:0;">
+        <div class="brand-title"><span>ADAMUS</span></div>
+        <div class="brand-sub">DRYWALL</div>
+      </div>
+    </div>
+    <div class="nav-section">Início</div>
+    <div class="nav-item active" data-view="dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</div>
+    <div class="nav-section">Execução</div>
+    <div class="nav-item" data-view="producao"><i class="bi bi-rulers"></i> Produção Diária</div>
+    <div class="nav-item" data-view="obras"><i class="bi bi-building"></i> Obras e Medição</div>
+    <div class="nav-section">Pagamento</div>
+    <div class="nav-item" data-view="folha"><i class="bi bi-wallet2"></i> Folha de Pagamento</div>
+    <div class="nav-item" data-view="anual"><i class="bi bi-bar-chart"></i> Relatório Anual</div>
+    <div class="nav-section">Cadastros</div>
+    <div class="nav-item" data-view="servicos"><i class="bi bi-tags"></i> Serviços e Preços</div>
+    <div class="nav-item" data-view="funcionarios"><i class="bi bi-people"></i> Funcionários</div>
+    <div class="nav-item" data-view="config"><i class="bi bi-gear"></i> Configurações</div>
+    <div class="sidebar-footer">
+      <div class="avatar" id="avatarSide">D</div>
+      <div class="info"><b id="userNome">Responsável</b><br /><small>GESTOR DE OBRAS</small></div>
+      <button class="icon-btn" id="themeBtnSide" title="Alternar tema" style="width:34px;height:34px;flex-shrink:0">
+        <i class="bi bi-brightness-high"></i>
+      </button>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <button class="icon-btn menu-toggle" id="menuToggle"><i class="bi bi-list"></i></button>
+        <div style="min-width:0;">
+          <h1 id="pageTitle">Olá!</h1>
+          <p class="sub" id="pageSub">Folha de Pagamento de Obras</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="olhoBtn" title="Mostrar / esconder valores"><i class="bi bi-eye-slash"></i></button>
+        <button class="icon-btn" id="themeBtn" title="Alternar tema"><i class="bi bi-brightness-high"></i></button>
+        <div class="avatar" id="avatarTop" style="cursor:default;">D</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- VIEW: DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <button class="btn btn-accent btn-cta mb-4" data-nova-prod><i class="bi bi-plus-circle-fill"></i> Lançar produção de hoje</button>
+
+        <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;">Resumo</h2>
+        <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 16px;" id="dashSub">Visão geral das obras</p>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3">
+            <div class="stat d-flex justify-content-between align-items-start gap-2">
+              <div><div class="n" id="stHoje">R$ 0,00</div><div class="l">Produção de hoje</div><div class="s" id="stHojeQt">0 m²</div></div>
+              <i class="bi bi-sun" style="font-size:22px;color:var(--accent);"></i>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat d-flex justify-content-between align-items-start gap-2">
+              <div><div class="n" id="stMes">R$ 0,00</div><div class="l" id="stMesLbl">Folha do mês</div><div class="s" id="stMesQt"></div></div>
+              <i class="bi bi-wallet2" style="font-size:22px;color:var(--accent);"></i>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat d-flex justify-content-between align-items-start gap-2">
+              <div><div class="n" id="stM2">0 m²</div><div class="l">Executado no mês</div><div class="s" id="stM2Sub">0 ml</div></div>
+              <i class="bi bi-rulers" style="font-size:22px;color:var(--accent);"></i>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat d-flex justify-content-between align-items-start gap-2">
+              <div><div class="n" id="stObras">0</div><div class="l">Obras em andamento</div><div class="s" id="stObrasSub"></div></div>
+              <i class="bi bi-building" style="font-size:22px;color:var(--accent);"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <h3 class="panel-title mb-0"><i class="bi bi-cone-striped"></i> Obras em andamento</h3>
+            <button class="btn btn-ghost" data-view="obras" style="padding:7px 14px;">Ver todas</button>
+          </div>
+          <div id="dashObras"></div>
+        </div>
+
+        <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;">Seus módulos</h2>
+        <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 20px;">Selecione um módulo para acessar</p>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="producao">
+              <div class="sc-ic"><i class="bi bi-rulers"></i></div>
+              <h5>Produção Diária</h5>
+              <p>Lançamento diário do que cada funcionário executou: m², metro linear, unidades.</p>
+              <div class="go"><span>Ver produção</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="obras">
+              <div class="sc-ic"><i class="bi bi-building"></i></div>
+              <h5>Obras e Medição</h5>
+              <p>Orçamento de cada obra, avanço físico e boletim de medição do período.</p>
+              <div class="go"><span>Ver obras</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="folha">
+              <div class="sc-ic"><i class="bi bi-wallet2"></i></div>
+              <h5>Folha de Pagamento</h5>
+              <p>Quanto cada funcionário produziu no período, vales descontados e o líquido a pagar.</p>
+              <div class="go"><span>Ver folha</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="anual">
+              <div class="sc-ic"><i class="bi bi-bar-chart"></i></div>
+              <h5>Relatório Anual</h5>
+              <p>Gráfico com a folha e a produção de cada mês do ano.</p>
+              <div class="go"><span>Ver relatório</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="servicos">
+              <div class="sc-ic"><i class="bi bi-tags"></i></div>
+              <h5>Serviços e Preços</h5>
+              <p>Parede, forro, tabica, sanca… com unidade, preço ao cliente e valor da mão de obra.</p>
+              <div class="go"><span>Gerenciar serviços</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="system-card" data-view="funcionarios">
+              <div class="sc-ic"><i class="bi bi-people"></i></div>
+              <h5>Funcionários</h5>
+              <p>Montadores, ajudantes e acabadores da equipe.</p>
+              <div class="go"><span>Gerenciar equipe</span><i class="bi bi-arrow-right"></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: PRODUÇÃO DIÁRIA -->
+      <section class="view" id="view-producao">
+        <div class="panel">
+          <div class="period-bar">
+            <div class="period">
+              <button class="icon-btn" id="prPrev" title="Mês anterior"><i class="bi bi-chevron-left"></i></button>
+              <select class="form-select sel-mes" id="prMes" aria-label="Mês"></select>
+              <select class="form-select sel-ano" id="prAno" aria-label="Ano"></select>
+              <button class="icon-btn" id="prNext" title="Próximo mês"><i class="bi bi-chevron-right"></i></button>
+            </div>
+            <div class="period-actions">
+              <button class="btn btn-ghost" id="prAtual">Mês atual</button>
+              <button class="btn btn-ghost" id="btnResumo"><i class="bi bi-chat-left-text"></i> Resumo p/ gestor</button>
+              <button class="btn btn-accent" data-nova-prod><i class="bi bi-plus-lg"></i> Nova Produção</button>
+            </div>
+          </div>
+          <div class="period-lbl mt-2" id="prPeriodo"></div>
+          <div class="filters mt-3">
+            <select class="form-select" id="prFiltObra" aria-label="Filtrar obra"></select>
+            <select class="form-select" id="prFiltFunc" aria-label="Filtrar funcionário"></select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prValor" style="color:var(--accent);">R$ 0,00</div><div class="l">Mão de obra produzida</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prM2">0</div><div class="l">m² executados</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prMl">0</div><div class="l">Metros lineares</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prCli">R$ 0,00</div><div class="l">Valor medido (cliente)</div></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h3 class="panel-title mb-0"><i class="bi bi-list-ul"></i> <span id="prTitulo">Lançamentos</span></h3>
+            <span class="badge-soft badge-count" id="prCount">0 lançamentos</span>
+          </div>
+          <div class="table-wrap">
+            <table class="grid fit">
+              <thead><tr><th>Serviço executado</th><th class="num">Qtd</th><th class="num">Mão de obra</th><th style="width:1%;"></th></tr></thead>
+              <tbody id="prBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: OBRAS -->
+      <section class="view" id="view-obras">
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-building"></i> Obras</h3>
+              <p class="panel-sub">Toque em uma obra para ver o orçamento, o avanço e o boletim de medição.</p>
+            </div>
+            <button class="btn btn-accent" id="btnNovaObra"><i class="bi bi-plus-lg"></i> Nova Obra</button>
+          </div>
+          <div class="filters mt-3">
+            <select class="form-select" id="obFiltStatus" aria-label="Filtrar status">
+              <option value="">Todas as obras</option>
+              <option value="andamento" selected>Em andamento</option>
+              <option value="pausada">Pausadas</option>
+              <option value="concluida">Concluídas</option>
+            </select>
+          </div>
+          <div class="table-wrap mt-3">
+            <table class="grid fit">
+              <thead><tr><th>Obra</th><th class="num hide-sm">Orçado</th><th class="num hide-xs">Medido</th><th style="min-width:130px;">Avanço</th></tr></thead>
+              <tbody id="obBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: OBRA (detalhe) -->
+      <section class="view" id="view-obra">
+        <div class="panel">
+          <div class="obra-head">
+            <div style="min-width:0;">
+              <button class="btn btn-ghost mb-3" data-view="obras" style="padding:6px 12px;"><i class="bi bi-arrow-left"></i> Obras</button>
+              <h2 id="odNome">Obra</h2>
+              <div class="obra-meta" id="odMeta"></div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-ghost" id="odEditar"><i class="bi bi-pencil"></i> Editar</button>
+              <button class="btn btn-ghost" id="odExcluir" title="Excluir obra"><i class="bi bi-trash3"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odOrc">R$ 0,00</div><div class="l">Valor orçado</div><div class="s" id="odOrcSub"></div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odMed" style="color:var(--accent);">R$ 0,00</div><div class="l">Medido acumulado</div><div class="s" id="odSaldo"></div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odPct">0%</div><div class="l">Avanço físico-financeiro</div><div class="s" id="odPctBar"></div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odMo">R$ 0,00</div><div class="l">Custo de mão de obra</div><div class="s" id="odMoSub"></div></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-clipboard-data"></i> Orçamento e execução</h3>
+              <p class="panel-sub">Quantidades contratadas por serviço e quanto já foi executado.</p>
+            </div>
+            <button class="btn btn-accent" id="btnNovoItem"><i class="bi bi-plus-lg"></i> Item</button>
+          </div>
+          <div class="table-wrap">
+            <table class="grid fit">
+              <thead><tr><th>Serviço</th><th class="num">Orçado</th><th class="num">Executado</th><th class="num hide-sm">Preço un.</th><th class="num hide-sm">Total</th><th style="width:1%;"></th></tr></thead>
+              <tbody id="odItens"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" id="medicaoPanel">
+          <div class="print-only mb-3">
+            <h2 style="font-size:18px;font-weight:700;margin:0;" id="medPrintEmp"></h2>
+            <div style="font-size:13px;" id="medPrintObra"></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-rulers"></i> <span id="medTitulo">Boletim de medição</span></h3>
+              <p class="panel-sub" id="medPeriodo"></p>
+            </div>
+            <button class="btn btn-ghost no-print" id="btnPrintMed"><i class="bi bi-printer"></i> Imprimir</button>
+          </div>
+          <div class="period mb-3 no-print">
+            <button class="icon-btn" id="mdPrev" title="Mês anterior"><i class="bi bi-chevron-left"></i></button>
+            <select class="form-select sel-mes" id="mdMes" aria-label="Mês"></select>
+            <select class="form-select sel-ano" id="mdAno" aria-label="Ano"></select>
+            <button class="icon-btn" id="mdNext" title="Próximo mês"><i class="bi bi-chevron-right"></i></button>
+          </div>
+          <div class="table-wrap mb-3">
+            <table class="grid fit">
+              <thead><tr><th>Serviço</th><th class="num hide-sm">Orçado</th><th class="num hide-sm">Anterior</th><th class="num">No período</th><th class="num hide-xs">Acumulado</th><th class="num">Valor período</th></tr></thead>
+              <tbody id="medBody"></tbody>
+            </table>
+          </div>
+          <div class="calc" id="medCalc"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: FOLHA -->
+      <section class="view" id="view-folha">
+        <div class="panel">
+          <div class="period-bar">
+            <div class="period">
+              <button class="icon-btn" id="foPrev" title="Mês anterior"><i class="bi bi-chevron-left"></i></button>
+              <select class="form-select sel-mes" id="foMes" aria-label="Mês"></select>
+              <select class="form-select sel-ano" id="foAno" aria-label="Ano"></select>
+              <button class="icon-btn" id="foNext" title="Próximo mês"><i class="bi bi-chevron-right"></i></button>
+            </div>
+            <div class="period-actions">
+              <button class="btn btn-ghost" id="foAtual">Mês atual</button>
+              <button class="btn btn-accent" data-novo-vale><i class="bi bi-cash-coin"></i> Novo Vale</button>
+            </div>
+          </div>
+          <div class="period-lbl mt-2" id="foPeriodo"></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="foBruto">R$ 0,00</div><div class="l">Produção (bruto)</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="foVales">R$ 0,00</div><div class="l">Vales / adiantamentos</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="foLiq" style="color:var(--accent);">R$ 0,00</div><div class="l">Líquido a pagar</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="foFunc">0</div><div class="l">Funcionários na folha</div></div></div>
+        </div>
+
+        <div class="panel" id="folhaPanel">
+          <div class="print-only mb-3">
+            <h2 style="font-size:18px;font-weight:700;margin:0;" id="foPrintEmp"></h2>
+            <div style="font-size:13px;" id="foPrintPer"></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-receipt"></i> <span id="foTitulo">Folha</span></h3>
+              <p class="panel-sub no-print">Toque no funcionário para ver o detalhamento da produção.</p>
+            </div>
+            <button class="btn btn-ghost no-print" id="btnPrintFolha"><i class="bi bi-printer"></i> Imprimir</button>
+          </div>
+          <div class="table-wrap">
+            <table class="grid fit">
+              <thead><tr><th>Funcionário</th><th class="num hide-xs">Produção</th><th class="num hide-xs">Vales</th><th class="num">Líquido</th></tr></thead>
+              <tbody id="foBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h3 class="panel-title mb-0"><i class="bi bi-cash-coin"></i> Vales e adiantamentos do período</h3>
+            <span class="badge-soft badge-count" id="vaCount">0 vales</span>
+          </div>
+          <div class="table-wrap">
+            <table class="grid fit">
+              <thead><tr><th>Funcionário</th><th class="num">Valor</th><th style="width:1%;"></th></tr></thead>
+              <tbody id="vaBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: ANUAL -->
+      <section class="view" id="view-anual">
+        <div class="panel">
+          <div class="period">
+            <button class="icon-btn" id="anoPrev" title="Ano anterior"><i class="bi bi-chevron-left"></i></button>
+            <select class="form-select sel-ano" id="filtAno" aria-label="Ano"></select>
+            <button class="icon-btn" id="anoNext" title="Próximo ano"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="aFolha" style="color:var(--accent);">R$ 0,00</div><div class="l">Folha do ano</div><div class="s" id="aFolhaSub"></div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="aMedia">R$ 0,00</div><div class="l">Média por mês</div><div class="s">meses com produção</div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="aM2">0 m²</div><div class="l">Executado no ano</div><div class="s" id="aMl"></div></div></div>
+          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="aCli">R$ 0,00</div><div class="l">Medido (cliente)</div><div class="s" id="aCliSub"></div></div></div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title"><i class="bi bi-bar-chart"></i> <span id="aTitulo">Folha por mês</span></h3>
+          <p class="panel-sub mb-3">Toque em uma barra para ver os detalhes; toque de novo para abrir a folha do mês.</p>
+          <div class="chart-box" id="chartBox">
+            <div class="chart-tip" id="chartTip"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title mb-3"><i class="bi bi-table"></i> Tabela do ano</h3>
+          <div class="table-wrap">
+            <table class="grid fit">
+              <thead><tr><th>Mês</th><th class="num hide-xs">m²</th><th class="num hide-sm">Medido</th><th class="num">Produção</th><th class="num hide-sm">Vales</th><th class="num hide-sm">Líquido</th></tr></thead>
+              <tbody id="aBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: SERVIÇOS -->
+      <section class="view" id="view-servicos">
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-tags"></i> Serviços e Preços</h3>
+              <p class="panel-sub">Preço por unidade cobrado do cliente e valor pago ao funcionário (mão de obra).</p>
+            </div>
+            <button class="btn btn-accent" id="btnNovoSrv"><i class="bi bi-plus-lg"></i> Novo Serviço</button>
+          </div>
+          <div class="table-wrap mt-3">
+            <table class="grid fit">
+              <thead><tr><th>Serviço</th><th class="num hide-xs">Cliente / un</th><th class="num">Mão de obra / un</th><th style="width:76px;"></th></tr></thead>
+              <tbody id="sBody"></tbody>
+            </table>
+          </div>
+          <p class="hint mt-2 mb-0"><i class="bi bi-info-circle"></i> Mudar o valor da mão de obra vale para os próximos lançamentos. Os já lançados mantêm o valor da época.</p>
+        </div>
+      </section>
+
+      <!-- VIEW: FUNCIONÁRIOS -->
+      <section class="view" id="view-funcionarios">
+        <div class="panel">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h3 class="panel-title"><i class="bi bi-people"></i> Funcionários</h3>
+              <p class="panel-sub">Equipe que executa os serviços. A produção do mês considera o período de fechamento.</p>
+            </div>
+            <button class="btn btn-accent" id="btnNovoFunc"><i class="bi bi-plus-lg"></i> Novo Funcionário</button>
+          </div>
+          <div class="table-wrap mt-3">
+            <table class="grid fit">
+              <thead><tr><th>Funcionário</th><th class="num hide-xs">Produção do mês</th><th style="width:76px;"></th></tr></thead>
+              <tbody id="fBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: CONFIGURAÇÕES -->
+      <section class="view" id="view-config">
+        <form id="formCfg" novalidate>
+          <div class="panel">
+            <h3 class="panel-title"><i class="bi bi-person-badge"></i> Empresa</h3>
+            <p class="panel-sub mb-3">Aparece no menu e no cabeçalho da folha e do boletim de medição impressos.</p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="cfgEmpresa">Nome da empresa</label>
+                <input type="text" class="form-control" id="cfgEmpresa" placeholder="Ex.: Silva Drywall" autocomplete="off" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="cfgResp">Seu nome (responsável)</label>
+                <input type="text" class="form-control" id="cfgResp" placeholder="Ex.: Luiz" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title"><i class="bi bi-calendar-check"></i> Fechamento do mês</h3>
+            <p class="panel-sub mb-3">Dia em que a folha e a medição do mês são fechadas.</p>
+            <label class="form-label" for="cfgCorte">Dia de fechamento</label>
+            <select class="form-select" id="cfgCorte" style="max-width:320px;"></select>
+            <div class="a-info mt-3" id="cfgPeriodo"></div>
+          </div>
+
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar configurações</button>
+          <div id="cfgResult" class="mt-3" style="display:none;"></div>
+        </form>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PRODUÇÃO -->
+<div class="modal fade" id="modalProd" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-rulers"></i> <span id="prodTitulo">Nova Produção</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formProd" novalidate>
+        <div class="modal-body">
+          <div id="prodFaltando" class="a-warn mb-3" style="display:none;"></div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="lData">Data *</label>
+              <input type="date" class="form-control" id="lData" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="lFunc">Funcionário *</label>
+              <select class="form-select" id="lFunc"></select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="lObra">Obra *</label>
+            <select class="form-select" id="lObra"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="lServ">Serviço executado *</label>
+            <select class="form-select" id="lServ"></select>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="lQtd">Quantidade *</label>
+              <div class="qtd-group">
+                <input type="text" inputmode="decimal" class="form-control money-input" id="lQtd" placeholder="0" autocomplete="off" />
+                <span class="suf" id="lUn">m²</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="lLocal">Local / ambiente</label>
+              <input type="text" class="form-control" id="lLocal" list="lLocalList" placeholder="Ex.: 2º pav. – sala" autocomplete="off" style="height:calc(100% - 28px);" />
+              <datalist id="lLocalList"></datalist>
+            </div>
+          </div>
+          <div class="hint mb-3" id="lProg"></div>
+          <div class="calc compact" id="lCalc"></div>
+          <div class="mt-3">
+            <label class="form-label" for="lObs">Observação</label>
+            <input type="text" class="form-control" id="lObs" placeholder="Opcional" autocomplete="off" />
+          </div>
+          <div id="prodErr" class="a-warn mt-3" style="display:none;"></div>
+          <div id="prodOk" class="a-info mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost hide-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-ghost" id="btnProdNovo"><i class="bi bi-plus-lg"></i> Salvar e lançar outro</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VALE -->
+<div class="modal fade" id="modalVale" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cash-coin"></i> <span id="valeTitulo">Novo Vale</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formVale" novalidate>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="vValor">Valor *</label>
+            <div class="money-group">
+              <span class="pre lg">R$</span>
+              <input type="text" inputmode="numeric" class="form-control money-input" id="vValor" placeholder="0,00" autocomplete="off" />
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="vData">Data *</label>
+              <input type="date" class="form-control" id="vData" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="vFunc">Funcionário *</label>
+              <select class="form-select" id="vFunc"></select>
+            </div>
+          </div>
+          <label class="form-label" for="vDesc">Descrição</label>
+          <input type="text" class="form-control" id="vDesc" placeholder="Ex.: Adiantamento, passagem, almoço" autocomplete="off" />
+          <div id="valeErr" class="a-warn mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RESUMO PARA O GESTOR -->
+<div class="modal fade" id="modalResumo" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-chat-left-text"></i> Resumo para o gestor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="hint mb-2" id="rsInfo"></p>
+        <textarea class="form-control" id="rsTexto" rows="14" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace;font-size:13px;"></textarea>
+        <div id="rsOk" class="a-info mt-3" style="display:none;"><i class="bi bi-check-circle-fill"></i> Texto copiado. Cole na conversa com o gestor.</div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-ghost" id="rsWhats" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+        <button type="button" class="btn btn-accent" id="rsCopiar"><i class="bi bi-clipboard"></i> Copiar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OBRA -->
+<div class="modal fade" id="modalObra" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-building"></i> <span id="obraTitulo">Nova Obra</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formObra" novalidate>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="oNome">Nome da obra *</label>
+            <input type="text" class="form-control" id="oNome" placeholder="Ex.: Edifício Aurora – Torre B" autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="oCliente">Cliente / construtora</label>
+            <input type="text" class="form-control" id="oCliente" autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="oEnd">Endereço</label>
+            <input type="text" class="form-control" id="oEnd" autocomplete="off" />
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label" for="oInicio">Início</label>
+              <input type="date" class="form-control" id="oInicio" />
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="oStatus">Status</label>
+              <select class="form-select" id="oStatus">
+                <option value="andamento">Em andamento</option>
+                <option value="pausada">Pausada</option>
+                <option value="concluida">Concluída</option>
+              </select>
+            </div>
+          </div>
+          <div id="obraErr" class="a-warn mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ITEM DO ORÇAMENTO -->
+<div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-clipboard-data"></i> <span id="itemTitulo">Item do orçamento</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formItem" novalidate>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="iServ">Serviço *</label>
+            <select class="form-select" id="iServ"></select>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="iQtd">Quantidade orçada *</label>
+              <div class="qtd-group">
+                <input type="text" inputmode="decimal" class="form-control" id="iQtd" placeholder="0" autocomplete="off" />
+                <span class="suf" id="iUn">m²</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="iPreco">Preço unitário (cliente)</label>
+              <div class="money-group">
+                <span class="pre">R$</span>
+                <input type="text" inputmode="numeric" class="form-control" id="iPreco" placeholder="0,00" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+          <div class="a-info" id="iTotal"></div>
+          <div id="itemErr" class="a-warn mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SERVIÇO (catálogo) -->
+<div class="modal fade" id="modalSrv" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-tags"></i> <span id="srvTitulo">Novo Serviço</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formSrv" novalidate>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="sNome">Nome do serviço *</label>
+            <input type="text" class="form-control" id="sNome" placeholder="Ex.: Parede drywall ST 1 face" autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sUn">Unidade de medida *</label>
+            <select class="form-select" id="sUn"></select>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label" for="sPreco">Preço ao cliente / un</label>
+              <div class="money-group">
+                <span class="pre">R$</span>
+                <input type="text" inputmode="numeric" class="form-control" id="sPreco" placeholder="0,00" autocomplete="off" />
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="sMo">Mão de obra / un *</label>
+              <div class="money-group">
+                <span class="pre">R$</span>
+                <input type="text" inputmode="numeric" class="form-control" id="sMo" placeholder="0,00" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+          <div id="srvErr" class="a-warn mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FUNCIONÁRIO -->
+<div class="modal fade" id="modalFunc" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-badge"></i> <span id="funcTitulo">Novo Funcionário</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formFunc" novalidate>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="fNome">Nome *</label>
+            <input type="text" class="form-control" id="fNome" autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="fFuncao">Função</label>
+            <input type="text" class="form-control" id="fFuncao" list="fFuncaoList" placeholder="Ex.: Montador" autocomplete="off" />
+            <datalist id="fFuncaoList"><option value="Montador"></option><option value="Ajudante"></option><option value="Acabador / massa"></option><option value="Encarregado"></option></datalist>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="fAtivo" checked />
+            <label class="form-check-label" for="fAtivo">Ativo (aparece nos lançamentos)</label>
+          </div>
+          <div id="funcErr" class="a-warn mt-3" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><i class="bi bi-floppy"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ─── Storage ─── */
+  const K = { obr: "dw_obras_v1", srv: "dw_serv_v1", fun: "dw_func_v1", lan: "dw_lanc_v1", val: "dw_vales_v1", cfg: "dw_cfg_v1", theme: "dw_theme" };
+  const load    = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; } };
+  const persist = (k, v) => {
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch (e) {
+      if (e.name === "QuotaExceededError") {
+        alert("⚠️ Armazenamento local cheio.\nNão foi possível salvar os dados.");
+      }
+    }
+  };
+
+  /*
+    Serviço:     { id, nome, un, preco:<centavos/un cobrado do cliente>, mo:<centavos/un pago ao funcionário> }
+    Obra:        { id, nome, cliente, endereco, inicio, status:"andamento"|"pausada"|"concluida", criado,
+                   itens:[{ id, servicoId, nome, un, qtd, preco:<centavos/un> }] }   ← orçamento
+    Funcionário: { id, nome, funcao, ativo }
+    Produção:    { id, data:"AAAA-MM-DD", obraId, funcId, servicoId, nome, un, qtd, mo, preco, local, obs, reg }
+                 mo/preco/nome/un são cópia do momento do lançamento: mudar o cadastro depois não altera
+                 a folha já lançada. Na medição, se o serviço estiver no orçamento da obra, vale o preço do orçamento.
+    Vale:        { id, data, funcId, valor:<centavos>, desc }
+    Config:      { empresa, responsavel, corte:<0 = último dia do mês | 1..30> }
+  */
+  const UN = { m2: "m²", ml: "ml", un: "un", vb: "vb", dia: "dia", h: "h", m3: "m³" };
+  const UN_NOME = { m2: "Metro quadrado (m²)", ml: "Metro linear (ml)", un: "Unidade (un)", vb: "Verba (vb)", dia: "Diária (dia)", h: "Hora (h)", m3: "Metro cúbico (m³)" };
+  const STATUS = { andamento: "Em andamento", pausada: "Pausada", concluida: "Concluída" };
+
+  /* Serviços de drywall criados na primeira vez (preços de exemplo: ajuste em Serviços e Preços) */
+  const SRV_PADRAO = [
+    ["Parede drywall ST (standard)", "m2", 9500, 1800],
+    ["Parede drywall RU (resistente à umidade)", "m2", 11000, 2000],
+    ["Parede drywall RF (resistente ao fogo)", "m2", 12000, 2200],
+    ["Revestimento / parede de 1 face (contraparede)", "m2", 7000, 1400],
+    ["Forro drywall estruturado", "m2", 8500, 1600],
+    ["Forro removível (modular)", "m2", 6500, 1000],
+    ["Tratamento de juntas e massa", "m2", 2500, 600],
+    ["Isolamento em lã de vidro / lã de rocha", "m2", 2200, 400],
+    ["Tabica / acabamento de forro", "ml", 1200, 300],
+    ["Sanca", "ml", 7000, 1500],
+    ["Cortineiro", "ml", 4500, 1000],
+    ["Fechamento de shaft", "m2", 9000, 1800],
+    ["Requadro de porta / reforço", "un", 6000, 1500],
+    ["Alçapão de inspeção", "un", 8000, 2000],
+    ["Diária", "dia", 0, 18000],
+  ];
+  let _n = 0;
+  const uid = () => Date.now().toString(36) + (_n++).toString(36) + Math.random().toString(36).slice(2, 6);
+  const srvPadrao = () => SRV_PADRAO.map(([nome, un, preco, mo]) => ({ id: uid(), nome, un, preco, mo }));
+
+  const CFG_PADRAO = { empresa: "", responsavel: "", corte: 0 };
+  let srvs   = load(K.srv, null);
+  if (!Array.isArray(srvs)) { srvs = srvPadrao(); persist(K.srv, srvs); }
+  let obras  = load(K.obr, []);
+  let funcs  = load(K.fun, []);
+  let lancs  = load(K.lan, []);
+  let vales  = load(K.val, []);
+  let cfg    = Object.assign({}, CFG_PADRAO, load(K.cfg, {}));
+
+  /* ─── Helpers ─── */
+  const $    = s => document.querySelector(s);
+  const esc  = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const pad  = n => String(n).padStart(2, "0");
+  const isoDate = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const today   = () => isoDate(new Date());
+  const fmtDM   = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
+  const fmtDMY  = iso => fmtDM(iso) + "/" + iso.slice(0, 4);
+  const stampNow = () => {
+    const n = new Date();
+    return n.toLocaleDateString("pt-BR") + " " + n.toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit"});
+  };
+  const MESES  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const MES3   = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const SEMANA = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+
+  const brl  = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const dec2 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const qfmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
+  const money = cents => brl.format((cents || 0) / 100);
+  const fq    = q => qfmt.format(q || 0);
+  const fqu   = (q, un) => `${fq(q)} ${UN[un] || un}`;
+  const pctTxt = p => (p || 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%";
+  const r2 = n => Math.round(n * 100) / 100;
+  /* Valores do eixo: R$ 500, R$ 1,5 mil, R$ 12 mil */
+  const moneyShort = cents => {
+    const v = cents / 100;
+    if (v >= 1000) return "R$ " + (v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mil";
+    return "R$ " + Math.round(v).toLocaleString("pt-BR");
+  };
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const byNome = (a, b) => a.nome.localeCompare(b.nome, "pt-BR");
+
+  /* ─── Máscara de dinheiro: digita só números, preenche da direita (1 → 0,01 → 0,15 → 1,50) ─── */
+  const getCents = el => parseInt(el.value.replace(/\D/g, ""), 10) || 0;
+  const setCents = (el, c) => { el.value = c ? dec2.format(c / 100) : ""; };
+  function maskMoney(el) {
+    el.addEventListener("input", () => {
+      const digits = el.value.replace(/\D/g, "").slice(0, 9);
+      setCents(el, parseInt(digits, 10) || 0);
+    });
+  }
+  /* Quantidade: aceita "12,5" ou "12.5"; com vírgula, pontos são separador de milhar */
+  const parseQtd = s => {
+    s = String(s).trim();
+    if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(s);
+    return isFinite(n) && n > 0 ? r2(n) : 0;
+  };
+  const setQtd = (el, q) => { el.value = q ? fq(q) : ""; };
+
+  /* ─── Lookups ─── */
+  const obraById = id => obras.find(o => o.id === id);
+  const funcById = id => funcs.find(f => f.id === id);
+  const srvById  = id => srvs.find(s => s.id === id);
+  const nomeObra = id => obraById(id)?.nome || "Obra excluída";
+  const nomeFunc = id => funcById(id)?.nome || "Funcionário excluído";
+
+  /* ─── Cálculos ─── */
+  const vMO = l => Math.round(l.qtd * l.mo);                    /* a pagar ao funcionário */
+  function precoCli(l) {                                         /* preço ao cliente: o do orçamento da obra, se houver */
+    const it = obraById(l.obraId)?.itens.find(i => i.servicoId === l.servicoId);
+    return it ? it.preco : (l.preco || 0);
+  }
+  const vCli = l => Math.round(l.qtd * precoCli(l));
+  function resumo(list) {
+    const r = { mo: 0, cli: 0, qt: list.length, m2: 0, ml: 0 };
+    list.forEach(l => { r.mo += vMO(l); r.cli += vCli(l); if (l.un === "m2") r.m2 += l.qtd; if (l.un === "ml") r.ml += l.qtd; });
+    r.m2 = r2(r.m2); r.ml = r2(r.ml);
+    r.dias = new Set(list.map(l => l.data)).size;
+    return r;
+  }
+  const somaVales = list => list.reduce((s, v) => s + v.valor, 0);
+  const itemTotal = i => Math.round(i.qtd * i.preco);
+  const execQtd = (obraId, servicoId) =>
+    r2(lancs.filter(l => l.obraId === obraId && l.servicoId === servicoId).reduce((s, l) => s + l.qtd, 0));
+  function obraStats(o) {
+    const ls = lancs.filter(l => l.obraId === o.id);
+    const orc = o.itens.reduce((s, i) => s + itemTotal(i), 0);
+    const med = ls.reduce((s, l) => s + vCli(l), 0);
+    const mo  = ls.reduce((s, l) => s + vMO(l), 0);
+    return { orc, med, mo, pct: orc ? med / orc * 100 : 0, qt: ls.length };
+  }
+  const progHtml = p => `<div class="prog-line"><div class="prog${p > 100.05 ? " over" : ""}"><span style="width:${Math.min(Math.max(p, 0), 100)}%"></span></div><span class="p">${pctTxt(p)}</span></div>`;
+  const statusBadge = st => `<span class="badge-soft st-${st}">${STATUS[st] || st}</span>`;
+
+  /* ─── Período de fechamento ───
+     corte N: o mês M vai do dia seguinte ao fechamento de M-1 até o dia N de M
+     (ex.: corte 25 → Outubro = 26/09 a 25/10). corte 0 = mês do calendário.
+     Dia maior que o mês (ex.: 30 em fevereiro) fecha no último dia. */
+  const lastDay = (ano, mes) => new Date(ano, mes + 1, 0).getDate();
+  const fimDia  = (ano, mes) => cfg.corte ? Math.min(cfg.corte, lastDay(ano, mes)) : lastDay(ano, mes);
+  function periodo(ano, mes) {
+    const fim = new Date(ano, mes, fimDia(ano, mes));
+    const pa = new Date(ano, mes - 1, 1);
+    const ini = new Date(pa.getFullYear(), pa.getMonth(), fimDia(pa.getFullYear(), pa.getMonth()) + 1);
+    return { ini: isoDate(ini), fim: isoDate(fim) };
+  }
+  /* Mês de fechamento ao qual uma data pertence → { ano, mes } */
+  function competencia(iso) {
+    const y = +iso.slice(0, 4), m = +iso.slice(5, 7) - 1, d = +iso.slice(8, 10);
+    if (d <= fimDia(y, m)) return { ano: y, mes: m };
+    const n = new Date(y, m + 1, 1);
+    return { ano: n.getFullYear(), mes: n.getMonth() };
+  }
+  const compKey = c => c.ano * 12 + c.mes;
+  const doMes = (arr, ano, mes) => { const k = ano * 12 + mes; return arr.filter(x => compKey(competencia(x.data)) === k); };
+  const doAno = (arr, ano) => arr.filter(x => competencia(x.data).ano === ano);
+  const periodoTxt = (ano, mes) => { const p = periodo(ano, mes); return `${fmtDMY(p.ini)} a ${fmtDMY(p.fim)}`; };
+
+  /* ─── Navegação ─── */
+  const pageMeta = {
+    dashboard:    null,
+    producao:     ["Produção Diária",     "O que cada funcionário executou"],
+    obras:        ["Obras e Medição",     "Orçamento, avanço e medição"],
+    obra:         ["Obra",                "Orçamento, execução e boletim de medição"],
+    folha:        ["Folha de Pagamento",  "Produção, vales e líquido a pagar"],
+    anual:        ["Relatório Anual",     "Folha e produção de cada mês do ano"],
+    servicos:     ["Serviços e Preços",   "Unidades, preço ao cliente e mão de obra"],
+    funcionarios: ["Funcionários",        "Equipe de montagem e acabamento"],
+    config:       ["Configurações",       "Empresa e fechamento do mês"],
+  };
+
+  function saudacao() {
+    const h = new Date().getHours();
+    const nome = cfg.responsavel.trim().split(/\s+/)[0];
+    return (h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite") + (nome ? ", " + nome + "!" : "!");
+  }
+  function applyBrand() {
+    $("#userNome").textContent  = cfg.responsavel.trim() || "Responsável";
+    const ini = (cfg.responsavel.trim() || cfg.empresa.trim() || "D")[0].toUpperCase();
+    $("#avatarSide").textContent = ini;
+    $("#avatarTop").textContent  = ini;
+  }
+  const nomeEmpresa = () => cfg.empresa.trim() || "Adamus Drywall";
+
+  let curObraId = null;
+  function goTo(view) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + view).classList.add("active");
+    const navView = view === "obra" ? "obras" : view;
+    document.querySelectorAll(".nav-item").forEach(n =>
+      n.classList.toggle("active", n.dataset.view === navView));
+    const meta = pageMeta[view] || [saudacao(), "Folha de Pagamento de Obras"];
+    $("#pageTitle").textContent = meta[0];
+    $("#pageSub").textContent   = meta[1];
+    closeSidebar();
+    window.scrollTo(0, 0);
+    renderView(view);
+    if (view === "config") { fillCfgForm(); $("#cfgResult").style.display = "none"; }
+  }
+  const currentView = () => (document.querySelector(".view.active").id || "").replace("view-", "");
+  function renderView(view) {
+    if (view === "dashboard")    renderDashboard();
+    if (view === "producao")     renderProducao();
+    if (view === "obras")        renderObras();
+    if (view === "obra")         renderObra();
+    if (view === "folha")        renderFolha();
+    if (view === "anual")        renderAnual();
+    if (view === "servicos")     renderServicos();
+    if (view === "funcionarios") renderFuncionarios();
+  }
+  function abrirObra(id) { curObraId = id; goTo("obra"); }
+
+  document.querySelectorAll("[data-view]").forEach(el =>
+    el.addEventListener("click", () => goTo(el.dataset.view)));
+
+  /* ─── Sidebar (mobile) ─── */
+  const sidebarEl  = $("#sidebar");
+  const backdropEl = $("#backdrop");
+  const openSidebar  = () => { sidebarEl.classList.add("open");    backdropEl.classList.add("show"); };
+  const closeSidebar = () => { sidebarEl.classList.remove("open"); backdropEl.classList.remove("show"); };
+  $("#menuToggle").addEventListener("click", openSidebar);
+  backdropEl.addEventListener("click", closeSidebar);
+
+  /* ─── Theme ─── */
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem(K.theme, t); } catch (e) { /* sem storage: so a sessao */ }
+    const ic = t === "dark" ? "bi-brightness-high" : "bi-moon-stars";
+    $("#themeBtn").innerHTML     = `<i class="bi ${ic}"></i>`;
+    $("#themeBtnSide").innerHTML = `<i class="bi ${ic}"></i>`;
+  }
+  const toggleTheme = () =>
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  $("#themeBtn").addEventListener("click", toggleTheme);
+
+  /* ─── Esconder valores: embaça todo texto com R$ (marca com .mv ao entrar na tela) ─── */
+  const RE_RS = /−?R\$\s?[\d.,]+(\smil)?/g;
+  function marcarValores(raiz) {
+    const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => /R\$\s?\d/.test(n.nodeValue) && !n.parentNode.closest(".mv, script, style, textarea, option")
+        ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+    const nos = [];
+    while (w.nextNode()) nos.push(w.currentNode);
+    nos.forEach(n => {
+      const pai = n.parentNode;
+      if (pai.closest("svg")) { pai.classList.add("mv"); return; }       /* texto do gráfico */
+      const frag = document.createDocumentFragment(), t = n.nodeValue;
+      let i = 0;
+      t.replace(RE_RS, (m, _g, pos) => {
+        frag.append(t.slice(i, pos));
+        const sp = document.createElement("span");
+        sp.className = "mv"; sp.textContent = m;
+        frag.append(sp);
+        i = pos + m.length;
+      });
+      frag.append(t.slice(i));
+      pai.replaceChild(frag, n);
+    });
+  }
+  new MutationObserver(ms => ms.forEach(m => {
+    if (m.type === "characterData") { if (m.target.isConnected) marcarValores(m.target.parentNode); }
+    else m.addedNodes.forEach(n => n.isConnected && (n.nodeType === 1 || n.nodeType === 3) && marcarValores(n.nodeType === 1 ? n : n.parentNode));
+  })).observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  function applyOcultar(on) {
+    document.body.classList.toggle("ocultar", on);
+    $("#olhoBtn").innerHTML = `<i class="bi ${on ? "bi-eye-slash" : "bi-eye"}"></i>`;
+    $("#olhoBtn").title = on ? "Mostrar valores" : "Esconder valores";
+    try { localStorage.setItem("dw_ocultar", on ? "1" : "0"); } catch {}
+  }
+  $("#olhoBtn").addEventListener("click", () => applyOcultar(!document.body.classList.contains("ocultar")));
+  let ocultarIni = true;
+  try { ocultarIni = localStorage.getItem("dw_ocultar") !== "0"; } catch {}
+  applyOcultar(ocultarIni);
+  marcarValores(document.body);
+  $("#themeBtnSide").addEventListener("click", toggleTheme);
+  applyTheme(document.documentElement.getAttribute("data-theme") || "dark");
+
+  /* ─── Impressão de um painel (folha / boletim) ─── */
+  function imprimir(panel) {
+    panel.classList.add("printing");
+    document.body.classList.add("print-mode");
+    const fim = () => { panel.classList.remove("printing"); document.body.classList.remove("print-mode"); window.removeEventListener("afterprint", fim); };
+    window.addEventListener("afterprint", fim);
+    window.print();
+    setTimeout(fim, 1000);
+  }
+
+  /* ══════════════════════════════════
+     FILTROS DE PERÍODO
+  ══════════════════════════════════ */
+  const comp0 = competencia(today());
+  const P = { prod: { ...comp0 }, folha: { ...comp0 }, med: { ...comp0 } };
+  let selAno = comp0.ano;
+
+  /* Anos disponíveis: do primeiro lançamento (ou atual) até o ano atual + o selecionado */
+  function anosDisponiveis(extra) {
+    const anos = new Set([comp0.ano, extra]);
+    lancs.forEach(l => anos.add(competencia(l.data).ano));
+    vales.forEach(v => anos.add(competencia(v.data).ano));
+    const min = Math.min(...anos), max = Math.max(...anos);
+    const out = [];
+    for (let a = max; a >= min; a--) out.push(a);
+    return out;
+  }
+  function fillAnoSelect(sel, valor) {
+    sel.innerHTML = anosDisponiveis(valor).map(a => `<option value="${a}">${a}</option>`).join("");
+    sel.value = valor;
+  }
+  /* Liga os controles ‹ mês ano › de um prefixo (pr, fo, md) a um estado de P */
+  function bindPeriod(key, pre, render) {
+    const st = P[key];
+    $("#" + pre + "Mes").innerHTML = MESES.map((m, i) => `<option value="${i}">${m}</option>`).join("");
+    const set = (ano, mes) => { const d = new Date(ano, mes, 1); st.ano = d.getFullYear(); st.mes = d.getMonth(); render(); };
+    $("#" + pre + "Mes").addEventListener("change", e => set(st.ano, +e.target.value));
+    $("#" + pre + "Ano").addEventListener("change", e => set(+e.target.value, st.mes));
+    $("#" + pre + "Prev").addEventListener("click", () => set(st.ano, st.mes - 1));
+    $("#" + pre + "Next").addEventListener("click", () => set(st.ano, st.mes + 1));
+    $("#" + pre + "Atual")?.addEventListener("click", () => { const c = competencia(today()); set(c.ano, c.mes); });
+  }
+  function syncPeriod(key, pre) {
+    $("#" + pre + "Mes").value = P[key].mes;
+    fillAnoSelect($("#" + pre + "Ano"), P[key].ano);
+  }
+  const perLbl = (ano, mes) => `<i class="bi bi-calendar-range"></i> Período: ${periodoTxt(ano, mes)}` +
+    (cfg.corte ? ` · fechamento dia ${cfg.corte}` : " · mês do calendário");
+
+  /* ══════════════════════════════════
+     DASHBOARD
+  ══════════════════════════════════ */
+  function renderDashboard() {
+    const now = new Date();
+    const comp = competencia(today());
+    const rH = resumo(lancs.filter(l => l.data === today()));
+    const rM = resumo(doMes(lancs, comp.ano, comp.mes));
+    $("#stHoje").textContent   = money(rH.mo);
+    $("#stHojeQt").textContent = `${fq(rH.m2)} m² · ${plural(rH.qt, "lançamento", "lançamentos")}`;
+    $("#stMes").textContent    = money(rM.mo);
+    $("#stMesLbl").textContent = `Folha de ${MESES[comp.mes].toLowerCase()}`;
+    const p = periodo(comp.ano, comp.mes);
+    $("#stMesQt").textContent  = `${fmtDM(p.ini)} a ${fmtDM(p.fim)} · bruto`;
+    $("#stM2").textContent     = `${fq(rM.m2)} m²`;
+    $("#stM2Sub").textContent  = `${fq(rM.ml)} ml no mês`;
+    const ativas = obras.filter(o => o.status === "andamento");
+    $("#stObras").textContent    = ativas.length;
+    $("#stObrasSub").textContent = plural(obras.length, "obra cadastrada", "obras cadastradas");
+    $("#dashSub").textContent  = `${SEMANA[now.getDay()]}, ${now.getDate()} de ${MESES[now.getMonth()].toLowerCase()} de ${now.getFullYear()}`;
+
+    $("#dashObras").innerHTML = ativas.length ? [...ativas].sort(byNome).map(o => {
+      const s = obraStats(o);
+      return `<div class="obra-list-item" data-obra="${o.id}">
+        <div class="top"><span><b>${esc(o.nome)}</b>${o.cliente ? ` <span style="color:var(--text-muted);">· ${esc(o.cliente)}</span>` : ""}</span>
+          <span style="color:var(--text-muted);white-space:nowrap;font-variant-numeric:tabular-nums;">${money(s.med)} / ${money(s.orc)}</span></div>
+        ${progHtml(s.pct)}</div>`;
+    }).join("") : `<div class="empty"><i class="bi bi-building"></i>Nenhuma obra em andamento. <a class="hint" style="cursor:pointer;color:var(--accent);" data-go="obras">Cadastrar obra</a></div>`;
+  }
+  $("#dashObras").addEventListener("click", e => {
+    const it = e.target.closest("[data-obra]");
+    if (it) abrirObra(it.dataset.obra);
+    if (e.target.closest("[data-go]")) goTo("obras");
+  });
+
+  /* ══════════════════════════════════
+     PRODUÇÃO DIÁRIA
+  ══════════════════════════════════ */
+  bindPeriod("prod", "pr", () => renderProducao());
+  ["#prFiltObra", "#prFiltFunc"].forEach(s => $(s).addEventListener("change", () => renderProducao()));
+
+  function fillFiltro(sel, lista, todos) {
+    const v = sel.value;
+    sel.innerHTML = `<option value="">${todos}</option>` + lista.map(x => `<option value="${x.id}">${esc(x.nome)}</option>`).join("");
+    sel.value = lista.some(x => x.id === v) ? v : "";
+  }
+
+  function renderProducao() {
+    const st = P.prod;
+    syncPeriod("prod", "pr");
+    fillFiltro($("#prFiltObra"), [...obras].sort(byNome), "Todas as obras");
+    fillFiltro($("#prFiltFunc"), [...funcs].sort(byNome), "Todos os funcionários");
+    const fo = $("#prFiltObra").value, ff = $("#prFiltFunc").value;
+    const list = doMes(lancs, st.ano, st.mes)
+      .filter(l => (!fo || l.obraId === fo) && (!ff || l.funcId === ff))
+      .sort((a, b) => b.data.localeCompare(a.data) || (b.reg || "").localeCompare(a.reg || ""));
+    const r = resumo(list);
+    $("#prPeriodo").innerHTML = perLbl(st.ano, st.mes);
+    $("#prValor").textContent = money(r.mo);
+    $("#prM2").textContent    = fq(r.m2);
+    $("#prMl").textContent    = fq(r.ml);
+    $("#prCli").textContent   = money(r.cli);
+    $("#prTitulo").textContent = `${MESES[st.mes]} de ${st.ano}`;
+    $("#prCount").textContent  = plural(list.length, "lançamento", "lançamentos");
+
+    if (!list.length) {
+      $("#prBody").innerHTML = `<tr><td colspan="4"><div class="empty"><i class="bi bi-inbox"></i>Nenhuma produção lançada neste período.</div></td></tr>`;
+      return;
+    }
+    /* Agrupa por dia com subtotal da mão de obra e m² */
+    const porDia = new Map();
+    list.forEach(l => { if (!porDia.has(l.data)) porDia.set(l.data, []); porDia.get(l.data).push(l); });
+    let html = "";
+    porDia.forEach((itens, data) => {
+      const [y, m, d] = data.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      const sub = resumo(itens);
+      html += `<tr class="day-row"><td colspan="4"><div class="day-flex"><span>${pad(d)}/${pad(m)} · ${SEMANA[dt.getDay()]}</span><span class="v">${sub.m2 ? fq(sub.m2) + " m² · " : ""}${money(sub.mo)}</span></div></td></tr>`;
+      itens.forEach(l => {
+        html += `<tr>
+          <td><b style="font-weight:600;">${esc(l.nome)}</b>
+            <span class="sub-line"><i class="bi bi-building"></i> ${esc(nomeObra(l.obraId))}${l.local ? " · " + esc(l.local) : ""}</span>
+            <span class="sub-line"><i class="bi bi-person"></i> ${esc(nomeFunc(l.funcId))}${l.obs ? " · " + esc(l.obs) : ""}</span></td>
+          <td class="num"><b>${fq(l.qtd)}</b> <span style="color:var(--text-muted);">${UN[l.un] || l.un}</span></td>
+          <td class="num val-cell"><b>${money(vMO(l))}</b><small>${money(l.mo)}/${UN[l.un] || l.un}</small></td>
+          <td class="act-cell" style="white-space:nowrap;text-align:right;">
+            <button class="btn-act edit" data-edit="${l.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+            <button class="btn-act del" data-del="${l.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
+          </td>
+        </tr>`;
+      });
+    });
+    $("#prBody").innerHTML = html;
+  }
+
+  $("#prBody").addEventListener("click", e => {
+    const ed = e.target.closest("[data-edit]");
+    const dl = e.target.closest("[data-del]");
+    if (ed) openModalProd(ed.dataset.edit);
+    if (dl) {
+      const l = lancs.find(x => x.id === dl.dataset.del);
+      if (!l || !confirm(`Excluir a produção de ${fqu(l.qtd, l.un)} (${l.nome})?`)) return;
+      lancs = lancs.filter(x => x.id !== l.id);
+      persist(K.lan, lancs);
+      renderProducao();
+    }
+  });
+
+  /* ══════════════════════════════════
+     RESUMO PARA O GESTOR (texto do que foi executado)
+     Obra X / Folha Fulano / Serviço/289,70m2x9,60 — soma por serviço e valor da época
+  ══════════════════════════════════ */
+  const modalResumo = new bootstrap.Modal($("#modalResumo"));
+  const UN_TXT = { m2: "m2", ml: "m", un: "", m3: "m3" };
+  const numTxt = n => n.toLocaleString("pt-BR", Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function textoResumo(list) {
+    const blocos = new Map();                     /* obra → funcionário → serviço */
+    [...list].sort((a, b) => a.data.localeCompare(b.data) || (a.reg || "").localeCompare(b.reg || "")).forEach(l => {
+      const kb = l.obraId + "|" + l.funcId;
+      if (!blocos.has(kb)) blocos.set(kb, { obraId: l.obraId, funcId: l.funcId, itens: new Map() });
+      const it = blocos.get(kb).itens, ks = l.nome + "|" + l.un + "|" + l.mo;
+      if (!it.has(ks)) it.set(ks, { nome: l.nome, un: l.un, mo: l.mo, qtd: 0 });
+      it.get(ks).qtd += l.qtd;
+    });
+    return [...blocos.values()]
+      .sort((a, b) => nomeObra(a.obraId).localeCompare(nomeObra(b.obraId), "pt-BR") || nomeFunc(a.funcId).localeCompare(nomeFunc(b.funcId), "pt-BR"))
+      .map(b => [`Obra ${nomeObra(b.obraId)}`, `Folha ${nomeFunc(b.funcId)}`,
+        ...[...b.itens.values()].map(s => `${s.nome}/${numTxt(r2(s.qtd))}${UN_TXT[s.un] ?? (UN[s.un] || s.un)}${s.mo ? "x" + numTxt(s.mo / 100) : ""}`)
+      ].join("\n")).join("\n\n");
+  }
+
+  function setResumo(txt) {
+    $("#rsWhats").href = "https://wa.me/?text=" + encodeURIComponent(txt);
+  }
+  $("#rsTexto").addEventListener("input", e => setResumo(e.target.value));
+
+  $("#btnResumo").addEventListener("click", () => {
+    const st = P.prod, fo = $("#prFiltObra").value, ff = $("#prFiltFunc").value;
+    const list = doMes(lancs, st.ano, st.mes).filter(l => (!fo || l.obraId === fo) && (!ff || l.funcId === ff));
+    if (!list.length) return alert("Nenhuma produção lançada neste período com os filtros escolhidos.");
+    const txt = textoResumo(list);
+    $("#rsInfo").innerHTML = `${MESES[st.mes]} de ${st.ano} (${periodoTxt(st.ano, st.mes)})` +
+      `${fo ? " · " + esc(nomeObra(fo)) : ""}${ff ? " · " + esc(nomeFunc(ff)) : ""}. Use os filtros da Produção para separar por obra ou funcionário. Dá para editar o texto antes de enviar.`;
+    $("#rsTexto").value = txt;
+    $("#rsOk").style.display = "none";
+    setResumo(txt);
+    modalResumo.show();
+  });
+
+  $("#rsCopiar").addEventListener("click", async () => {
+    const ta = $("#rsTexto");
+    try { await navigator.clipboard.writeText(ta.value); }
+    catch { ta.select(); document.execCommand("copy"); }
+    $("#rsOk").style.display = "block";
+  });
+
+  /* ══════════════════════════════════
+     MODAL PRODUÇÃO (novo / editar)
+  ══════════════════════════════════ */
+  const modalProd = new bootstrap.Modal($("#modalProd"));
+  let editLancId = null;
+  let ultimo = { obraId: "", funcId: "" };      /* repete obra e funcionário do último lançamento */
+
+  /* Serviços do orçamento da obra primeiro; depois os demais do catálogo */
+  function fillServSelect(obraId, keep) {
+    const o = obraById(obraId);
+    const doOrc = o ? o.itens.map(i => i.servicoId) : [];
+    const orc = srvs.filter(s => doOrc.includes(s.id)).sort(byNome);
+    const outros = srvs.filter(s => !doOrc.includes(s.id)).sort(byNome);
+    const opt = s => `<option value="${s.id}">${esc(s.nome)} (${UN[s.un] || s.un})</option>`;
+    $("#lServ").innerHTML = `<option value="">Selecione o serviço…</option>` +
+      (orc.length ? `<optgroup label="Orçamento da obra">${orc.map(opt).join("")}</optgroup><optgroup label="Outros serviços">${outros.map(opt).join("")}</optgroup>` : outros.map(opt).join(""));
+    if (keep && srvById(keep)) $("#lServ").value = keep;
+  }
+  function fillProdSelects(lanc) {
+    const fAtivos = funcs.filter(f => f.ativo !== false || (lanc && f.id === lanc.funcId)).sort(byNome);
+    const oAtivas = obras.filter(o => o.status !== "concluida" || (lanc && o.id === lanc.obraId)).sort(byNome);
+    $("#lFunc").innerHTML = `<option value="">Selecione…</option>` + fAtivos.map(f => `<option value="${f.id}">${esc(f.nome)}</option>`).join("");
+    $("#lObra").innerHTML = `<option value="">Selecione a obra…</option>` + oAtivas.map(o => `<option value="${o.id}">${esc(o.nome)}</option>`).join("");
+    const falta = [];
+    if (!fAtivos.length) falta.push(`<a data-go-modal="funcionarios">cadastre um funcionário</a>`);
+    if (!oAtivas.length) falta.push(`<a data-go-modal="obras">cadastre uma obra</a>`);
+    $("#prodFaltando").innerHTML = falta.length ? `<i class="bi bi-exclamation-triangle"></i> Antes de lançar, ${falta.join(" e ")}.` : "";
+    $("#prodFaltando").style.display = falta.length ? "" : "none";
+  }
+  $("#prodFaltando").addEventListener("click", e => {
+    const a = e.target.closest("[data-go-modal]");
+    if (a) { modalProd.hide(); goTo(a.dataset.goModal); }
+  });
+  function fillLocalList(obraId) {
+    const set = new Set(lancs.filter(l => l.obraId === obraId && l.local).map(l => l.local));
+    $("#lLocalList").innerHTML = [...set].slice(0, 40).map(v => `<option value="${esc(v)}"></option>`).join("");
+  }
+
+  /* Valores que o lançamento vai usar: mantém os da época ao editar sem trocar obra/serviço */
+  function snapshot() {
+    const s = srvById($("#lServ").value);
+    const obraId = $("#lObra").value;
+    const ed = editLancId && lancs.find(x => x.id === editLancId);
+    if (ed && ed.servicoId === $("#lServ").value && ed.obraId === obraId) return { nome: ed.nome, un: ed.un, mo: ed.mo, preco: ed.preco };
+    if (!s) return null;
+    const it = obraById(obraId)?.itens.find(i => i.servicoId === s.id);
+    return { nome: s.nome, un: s.un, mo: s.mo, preco: it ? it.preco : s.preco };
+  }
+
+  function renderProdCalc() {
+    const sn = snapshot();
+    const qtd = parseQtd($("#lQtd").value);
+    $("#lUn").textContent = sn ? (UN[sn.un] || sn.un) : "";
+    if (!sn) { $("#lCalc").innerHTML = ""; $("#lProg").innerHTML = ""; return; }
+    const l = { qtd, mo: sn.mo, preco: sn.preco, obraId: $("#lObra").value, servicoId: $("#lServ").value };
+    const u = UN[sn.un] || sn.un;
+    $("#lCalc").innerHTML = `
+      <div class="calc-head">Funcionário</div>
+      <div class="calc-row"><span>${fq(qtd)} ${u} × ${money(sn.mo)}</span><span class="v">${money(vMO(l))}</span></div>
+      <div class="calc-row total"><span>(=) Mão de obra a pagar</span><span class="v">${money(vMO(l))}</span></div>
+      <div class="calc-head">Medição (cliente)</div>
+      <div class="calc-row"><span>${fq(qtd)} ${u} × ${money(precoCli(l))}</span><span class="v">${money(vCli(l))}</span></div>`;
+    /* Avanço do item no orçamento da obra */
+    const it = obraById(l.obraId)?.itens.find(i => i.servicoId === l.servicoId);
+    if (it) {
+      const ed = editLancId && lancs.find(x => x.id === editLancId);
+      const ja = execQtd(l.obraId, l.servicoId) - (ed && ed.obraId === l.obraId && ed.servicoId === l.servicoId ? ed.qtd : 0);
+      const depois = r2(ja + qtd);
+      const saldo = r2(it.qtd - depois);
+      $("#lProg").innerHTML = `<i class="bi bi-clipboard-data"></i> Orçado ${fqu(it.qtd, it.un)} · executado ${fqu(r2(ja), it.un)}` +
+        (qtd ? ` → ${fqu(depois, it.un)} (${pctTxt(it.qtd ? depois / it.qtd * 100 : 0)})` : "") +
+        (saldo < 0 ? ` <span style="color:var(--warn);font-weight:700;">· ${fqu(-saldo, it.un)} acima do orçado</span>` : ` · saldo ${fqu(saldo, it.un)}`);
+    } else {
+      $("#lProg").innerHTML = l.obraId ? `<i class="bi bi-info-circle"></i> Serviço fora do orçamento da obra: medido pelo preço do cadastro.` : "";
+    }
+  }
+  $("#lObra").addEventListener("change", () => { fillServSelect($("#lObra").value, $("#lServ").value); fillLocalList($("#lObra").value); renderProdCalc(); });
+  $("#lServ").addEventListener("change", renderProdCalc);
+  $("#lQtd").addEventListener("input", renderProdCalc);
+
+  function resetProdForm(keep) {
+    if (!keep) {
+      $("#lData").value = today();
+      $("#lObra").value = obraById(ultimo.obraId) ? ultimo.obraId : "";
+      $("#lFunc").value = funcById(ultimo.funcId) ? ultimo.funcId : "";
+    }
+    if (!$("#lObra").value && $("#lObra").options.length === 2) $("#lObra").selectedIndex = 1;
+    if (!$("#lFunc").value && $("#lFunc").options.length === 2) $("#lFunc").selectedIndex = 1;
+    fillServSelect($("#lObra").value, keep ? $("#lServ").value : "");
+    fillLocalList($("#lObra").value);
+    $("#lQtd").value = "";
+    $("#lObs").value = "";
+    if (!keep) $("#lLocal").value = "";
+    $("#prodErr").style.display = "none";
+    renderProdCalc();
+  }
+
+  function openModalProd(id) {
+    editLancId = id || null;
+    const l = editLancId && lancs.find(x => x.id === editLancId);
+    fillProdSelects(l);
+    resetProdForm(false);
+    $("#prodOk").style.display = "none";
+    $("#prodTitulo").textContent = l ? "Editar Produção" : "Nova Produção";
+    $("#btnProdNovo").style.display = l ? "none" : "";
+    if (l) {
+      $("#lData").value = l.data;
+      $("#lObra").value = l.obraId;
+      $("#lFunc").value = l.funcId;
+      fillServSelect(l.obraId, l.servicoId);
+      fillLocalList(l.obraId);
+      setQtd($("#lQtd"), l.qtd);
+      $("#lLocal").value = l.local || "";
+      $("#lObs").value = l.obs || "";
+      renderProdCalc();
+    }
+    modalProd.show();
+  }
+  $("#modalProd").addEventListener("shown.bs.modal", () => {
+    if (!$("#lObra").value) $("#lObra").focus();
+    else if (!$("#lServ").value) $("#lServ").focus();
+    else $("#lQtd").focus();
+  });
+  document.querySelectorAll("[data-nova-prod]").forEach(b => b.addEventListener("click", () => openModalProd()));
+
+  function salvarProd() {
+    const err = $("#prodErr");
+    err.style.display = "none";
+    const fail = (msg, el) => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; el?.focus(); return false; };
+    const data = $("#lData").value, funcId = $("#lFunc").value, obraId = $("#lObra").value, servicoId = $("#lServ").value;
+    const qtd = parseQtd($("#lQtd").value);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return fail("Informe a data.", $("#lData"));
+    if (!funcId) return fail("Selecione o funcionário.", $("#lFunc"));
+    if (!obraId) return fail("Selecione a obra.", $("#lObra"));
+    if (!servicoId) return fail("Selecione o serviço executado.", $("#lServ"));
+    if (!(qtd > 0)) return fail("Informe a quantidade executada.", $("#lQtd"));
+    const sn = snapshot();
+    const local = $("#lLocal").value.trim(), obs = $("#lObs").value.trim();
+    const dados = { data, funcId, obraId, servicoId, qtd, local, obs, ...sn };
+    if (editLancId) {
+      const l = lancs.find(x => x.id === editLancId);
+      if (l) Object.assign(l, dados);
+    } else {
+      lancs.push({ id: uid(), ...dados, reg: stampNow() });
+    }
+    ultimo = { obraId, funcId };
+    persist(K.lan, lancs);
+    renderView(currentView());
+    return dados;
+  }
+  $("#formProd").addEventListener("submit", e => {
+    e.preventDefault();
+    if (salvarProd()) modalProd.hide();
+  });
+  $("#btnProdNovo").addEventListener("click", () => {
+    const ok = salvarProd();
+    if (!ok) return;
+    resetProdForm(true);
+    const info = $("#prodOk");
+    info.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${fqu(ok.qtd, ok.un)} de ${esc(ok.nome)} salvo (${money(vMO(ok))} de mão de obra). Lance o próximo.`;
+    info.style.display = "block";
+    $("#lServ").focus();
+  });
+
+  /* ══════════════════════════════════
+     OBRAS
+  ══════════════════════════════════ */
+  $("#obFiltStatus").addEventListener("change", () => renderObras());
+  function renderObras() {
+    const f = $("#obFiltStatus").value;
+    const list = obras.filter(o => !f || o.status === f).sort(byNome);
+    $("#obBody").innerHTML = list.length ? list.map(o => {
+      const s = obraStats(o);
+      return `<tr class="click-row" data-obra="${o.id}">
+        <td><b style="font-weight:600;">${esc(o.nome)}</b>
+          <span class="sub-line">${statusBadge(o.status)}${o.cliente ? " " + esc(o.cliente) : ""}</span></td>
+        <td class="num hide-sm">${money(s.orc)}</td>
+        <td class="num hide-xs">${money(s.med)}</td>
+        <td>${progHtml(s.pct)}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="4"><div class="empty"><i class="bi bi-building"></i>Nenhuma obra ${f ? "com este status" : "cadastrada"}.</div></td></tr>`;
+  }
+  $("#obBody").addEventListener("click", e => {
+    const tr = e.target.closest("[data-obra]");
+    if (tr) abrirObra(tr.dataset.obra);
+  });
+
+  /* Modal obra */
+  const modalObra = new bootstrap.Modal($("#modalObra"));
+  let editObraId = null;
+  function openModalObra(id) {
+    editObraId = id || null;
+    const o = editObraId && obraById(editObraId);
+    $("#obraTitulo").textContent = o ? "Editar Obra" : "Nova Obra";
+    $("#oNome").value    = o ? o.nome : "";
+    $("#oCliente").value = o ? o.cliente || "" : "";
+    $("#oEnd").value     = o ? o.endereco || "" : "";
+    $("#oInicio").value  = o ? o.inicio || "" : today();
+    $("#oStatus").value  = o ? o.status : "andamento";
+    $("#obraErr").style.display = "none";
+    modalObra.show();
+  }
+  $("#modalObra").addEventListener("shown.bs.modal", () => $("#oNome").focus());
+  $("#btnNovaObra").addEventListener("click", () => openModalObra());
+  $("#formObra").addEventListener("submit", e => {
+    e.preventDefault();
+    const nome = $("#oNome").value.trim();
+    const err = $("#obraErr");
+    if (!nome) { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Informe o nome da obra.`; err.style.display = "block"; return; }
+    if (obras.some(o => o.id !== editObraId && o.nome.toLowerCase() === nome.toLowerCase())) {
+      err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Já existe uma obra com esse nome.`; err.style.display = "block"; return;
+    }
+    const dados = { nome, cliente: $("#oCliente").value.trim(), endereco: $("#oEnd").value.trim(), inicio: $("#oInicio").value, status: $("#oStatus").value };
+    let id = editObraId;
+    if (id) Object.assign(obraById(id), dados);
+    else { id = uid(); obras.push({ id, ...dados, itens: [], criado: stampNow() }); }
+    persist(K.obr, obras);
+    modalObra.hide();
+    if (!editObraId) abrirObra(id); else renderView(currentView());
+  });
+
+  /* ─── Detalhe da obra ─── */
+  bindPeriod("med", "md", () => renderMedicao());
+
+  function renderObra() {
+    const o = obraById(curObraId);
+    if (!o) { goTo("obras"); return; }
+    $("#pageTitle").textContent = o.nome;
+    $("#odNome").textContent = o.nome;
+    $("#odMeta").innerHTML = [statusBadge(o.status),
+      o.cliente ? `<span><i class="bi bi-person"></i> ${esc(o.cliente)}</span>` : "",
+      o.endereco ? `<span><i class="bi bi-geo-alt"></i> ${esc(o.endereco)}</span>` : "",
+      o.inicio ? `<span><i class="bi bi-calendar"></i> início ${fmtDMY(o.inicio)}</span>` : ""].join("");
+    const s = obraStats(o);
+    $("#odOrc").textContent    = money(s.orc);
+    $("#odOrcSub").textContent = plural(o.itens.length, "item", "itens");
+    $("#odMed").textContent    = money(s.med);
+    $("#odSaldo").textContent  = `saldo a medir ${money(Math.max(s.orc - s.med, 0))}`;
+    $("#odPct").textContent    = pctTxt(s.pct);
+    $("#odPctBar").innerHTML   = `<div class="prog mt-2${s.pct > 100.05 ? " over" : ""}"><span style="width:${Math.min(s.pct, 100)}%"></span></div>`;
+    $("#odMo").textContent     = money(s.mo);
+    $("#odMoSub").textContent  = s.med ? `${pctTxt(s.mo / s.med * 100)} do medido · ${plural(s.qt, "lançamento", "lançamentos")}` : plural(s.qt, "lançamento", "lançamentos");
+
+    const itens = [...o.itens].sort(byNome);
+    $("#odItens").innerHTML = itens.length ? itens.map(i => {
+      const ex = execQtd(o.id, i.servicoId);
+      const p = i.qtd ? ex / i.qtd * 100 : 0;
+      return `<tr>
+        <td><b style="font-weight:600;">${esc(i.nome)}</b><div class="mt-1" style="max-width:260px;">${progHtml(p)}</div></td>
+        <td class="num">${fqu(i.qtd, i.un)}</td>
+        <td class="num val-cell"><b>${fqu(ex, i.un)}</b><small>saldo ${fq(r2(i.qtd - ex))}</small></td>
+        <td class="num hide-sm">${money(i.preco)}</td>
+        <td class="num hide-sm" style="font-weight:700;">${money(itemTotal(i))}</td>
+        <td class="act-cell" style="white-space:nowrap;text-align:right;">
+          <button class="btn-act edit" data-edit-item="${i.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn-act del" data-del-item="${i.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
+        </td>
+      </tr>`;
+    }).join("") + `<tr class="total-row"><td>Total orçado</td><td></td><td></td><td class="hide-sm"></td><td class="num hide-sm" style="color:var(--accent);">${money(s.orc)}</td><td></td></tr>`
+      : `<tr><td colspan="6"><div class="empty"><i class="bi bi-clipboard-data"></i>Nenhum item no orçamento. Adicione os serviços e as quantidades contratadas.</div></td></tr>`;
+
+    renderMedicao();
+  }
+
+  /* Boletim de medição: anterior / no período / acumulado por serviço */
+  function renderMedicao() {
+    const o = obraById(curObraId);
+    if (!o) return;
+    const st = P.med;
+    syncPeriod("med", "md");
+    const k = st.ano * 12 + st.mes;
+    const ls = lancs.filter(l => l.obraId === o.id);
+    const linhas = new Map();
+    o.itens.forEach(i => linhas.set(i.servicoId, { nome: i.nome, un: i.un, orc: i.qtd, preco: i.preco, ant: 0, per: 0, vAnt: 0, vPer: 0, item: true }));
+    ls.forEach(l => {
+      const ck = compKey(competencia(l.data));
+      if (ck > k) return;
+      if (!linhas.has(l.servicoId)) linhas.set(l.servicoId, { nome: l.nome, un: l.un, orc: 0, preco: l.preco, ant: 0, per: 0, vAnt: 0, vPer: 0, item: false });
+      const x = linhas.get(l.servicoId);
+      if (ck === k) { x.per += l.qtd; x.vPer += vCli(l); } else { x.ant += l.qtd; x.vAnt += vCli(l); }
+    });
+    const rows = [...linhas.values()].filter(x => x.item || x.ant || x.per).sort(byNome);
+    let tPer = 0, tAcum = 0;
+    const orcTotal = o.itens.reduce((s, i) => s + itemTotal(i), 0);
+    $("#medTitulo").textContent  = `Boletim de medição — ${MESES[st.mes]}/${st.ano}`;
+    $("#medPeriodo").textContent = `Período: ${periodoTxt(st.ano, st.mes)}`;
+    $("#medPrintEmp").textContent  = nomeEmpresa();
+    $("#medPrintObra").textContent = `Obra: ${o.nome}${o.cliente ? " · Cliente: " + o.cliente : ""}${o.endereco ? " · " + o.endereco : ""}`;
+    $("#medBody").innerHTML = rows.length ? rows.map(x => {
+      const acum = r2(x.ant + x.per);
+      tPer += x.vPer; tAcum += x.vAnt + x.vPer;
+      const u = UN[x.un] || x.un;
+      return `<tr>
+        <td>${esc(x.nome)}${x.item ? "" : ` <span class="badge-soft badge-pag">extra</span>`}<span class="sub-line">${u} · ${money(x.preco)}/${u}${x.orc ? " · " + pctTxt(acum / x.orc * 100) + " executado" : ""}</span></td>
+        <td class="num hide-sm">${x.orc ? fq(x.orc) : "—"}</td>
+        <td class="num hide-sm">${fq(r2(x.ant))}</td>
+        <td class="num" style="font-weight:700;">${fq(r2(x.per))}</td>
+        <td class="num hide-xs">${fq(acum)}</td>
+        <td class="num" style="font-weight:700;">${money(x.vPer)}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="6"><div class="empty"><i class="bi bi-rulers"></i>Nada para medir: cadastre o orçamento ou lance produção nesta obra.</div></td></tr>`;
+    $("#medCalc").innerHTML = `
+      <div class="calc-row"><span>Valor orçado</span><span class="v">${money(orcTotal)}</span></div>
+      <div class="calc-row minus"><span>Medido até o período anterior</span><span class="v">${money(tAcum - tPer)}</span></div>
+      <div class="calc-row total"><span>(=) Medição do período</span><span class="v">${money(tPer)}</span></div>
+      <div class="calc-row sub"><span>Acumulado medido${orcTotal ? ` (${pctTxt(tAcum / orcTotal * 100)})` : ""}</span><span class="v">${money(tAcum)}</span></div>
+      <div class="calc-row${orcTotal - tAcum < 0 ? " neg" : ""}"><span>Saldo a medir</span><span class="v">${money(orcTotal - tAcum)}</span></div>`;
+  }
+  $("#btnPrintMed").addEventListener("click", () => imprimir($("#medicaoPanel")));
+  $("#odEditar").addEventListener("click", () => openModalObra(curObraId));
+  $("#odExcluir").addEventListener("click", () => {
+    const o = obraById(curObraId);
+    if (!o) return;
+    const n = lancs.filter(l => l.obraId === o.id).length;
+    if (!confirm(`Excluir a obra "${o.nome}"?` + (n ? `\n\n${plural(n, "lançamento de produção também será excluído", "lançamentos de produção também serão excluídos")} (sai da folha).` : "") + "\n\nEsta ação não pode ser desfeita.")) return;
+    obras = obras.filter(x => x.id !== o.id);
+    lancs = lancs.filter(l => l.obraId !== o.id);
+    persist(K.obr, obras); persist(K.lan, lancs);
+    goTo("obras");
+  });
+
+  /* Modal item do orçamento */
+  const modalItem = new bootstrap.Modal($("#modalItem"));
+  let editItemId = null;
+  maskMoney($("#iPreco"));
+  function renderItemTotal() {
+    const s = srvById($("#iServ").value);
+    const it = editItemId && obraById(curObraId)?.itens.find(i => i.id === editItemId);
+    const un = s ? s.un : it?.un;
+    $("#iUn").textContent = un ? (UN[un] || un) : "";
+    const q = parseQtd($("#iQtd").value), p = getCents($("#iPreco"));
+    $("#iTotal").innerHTML = `<i class="bi bi-calculator"></i> ${fq(q)} ${un ? UN[un] || un : ""} × ${money(p)} = <strong>${money(Math.round(q * p))}</strong>`;
+  }
+  function openModalItem(id) {
+    const o = obraById(curObraId);
+    editItemId = id || null;
+    const it = editItemId && o.itens.find(i => i.id === editItemId);
+    const usados = o.itens.filter(i => i.id !== editItemId).map(i => i.servicoId);
+    const lista = srvs.filter(s => !usados.includes(s.id)).sort(byNome);
+    $("#iServ").innerHTML = `<option value="">Selecione o serviço…</option>` + lista.map(s => `<option value="${s.id}">${esc(s.nome)} (${UN[s.un] || s.un})</option>`).join("");
+    if (it && !srvById(it.servicoId)) $("#iServ").insertAdjacentHTML("beforeend", `<option value="${it.servicoId}">${esc(it.nome)} (${UN[it.un] || it.un})</option>`);
+    $("#iServ").value = it ? it.servicoId : "";
+    $("#iServ").disabled = !!it && lancs.some(l => l.obraId === o.id && l.servicoId === it.servicoId);
+    setQtd($("#iQtd"), it ? it.qtd : 0);
+    setCents($("#iPreco"), it ? it.preco : 0);
+    $("#itemTitulo").textContent = it ? "Editar item" : "Novo item do orçamento";
+    $("#itemErr").style.display = "none";
+    renderItemTotal();
+    modalItem.show();
+  }
+  $("#modalItem").addEventListener("shown.bs.modal", () => ($("#iServ").disabled || $("#iServ").value ? $("#iQtd") : $("#iServ")).focus());
+  $("#iServ").addEventListener("change", () => {
+    const s = srvById($("#iServ").value);
+    if (s) setCents($("#iPreco"), s.preco);
+    renderItemTotal();
+  });
+  ["#iQtd", "#iPreco"].forEach(s => $(s).addEventListener("input", renderItemTotal));
+  $("#btnNovoItem").addEventListener("click", () => openModalItem());
+  $("#formItem").addEventListener("submit", e => {
+    e.preventDefault();
+    const o = obraById(curObraId);
+    const err = $("#itemErr");
+    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const servicoId = $("#iServ").value, qtd = parseQtd($("#iQtd").value), preco = getCents($("#iPreco"));
+    if (!servicoId) return fail("Selecione o serviço.");
+    if (!(qtd > 0)) return fail("Informe a quantidade orçada.");
+    const s = srvById(servicoId);
+    const it = editItemId && o.itens.find(i => i.id === editItemId);
+    const nome = s ? s.nome : it.nome, un = s ? s.un : it.un;
+    if (it) Object.assign(it, { servicoId, nome, un, qtd, preco });
+    else o.itens.push({ id: uid(), servicoId, nome, un, qtd, preco });
+    persist(K.obr, obras);
+    modalItem.hide();
+    renderObra();
+  });
+  $("#odItens").addEventListener("click", e => {
+    const ed = e.target.closest("[data-edit-item]");
+    const dl = e.target.closest("[data-del-item]");
+    if (ed) openModalItem(ed.dataset.editItem);
+    if (dl) {
+      const o = obraById(curObraId);
+      const it = o.itens.find(i => i.id === dl.dataset.delItem);
+      if (!it || !confirm(`Remover "${it.nome}" do orçamento?\n\nA produção já lançada continua, mas passa a ser medida pelo preço do cadastro.`)) return;
+      o.itens = o.itens.filter(i => i.id !== it.id);
+      persist(K.obr, obras);
+      renderObra();
+    }
+  });
+
+  /* ══════════════════════════════════
+     FOLHA DE PAGAMENTO
+  ══════════════════════════════════ */
+  bindPeriod("folha", "fo", () => renderFolha());
+  const folhaAbertos = new Set();
+
+  function renderFolha() {
+    const st = P.folha;
+    syncPeriod("folha", "fo");
+    const ls = doMes(lancs, st.ano, st.mes);
+    const vs = doMes(vales, st.ano, st.mes).sort((a, b) => a.data.localeCompare(b.data));
+    const ids = new Set([...ls.map(l => l.funcId), ...vs.map(v => v.funcId)]);
+    const rows = [...ids].map(id => {
+      const lf = ls.filter(l => l.funcId === id), vf = vs.filter(v => v.funcId === id);
+      const prod = lf.reduce((s, l) => s + vMO(l), 0), val = somaVales(vf);
+      return { id, nome: nomeFunc(id), funcao: funcById(id)?.funcao || "", lf, vf, prod, val, liq: prod - val };
+    }).sort(byNome);
+    const tProd = rows.reduce((s, r) => s + r.prod, 0), tVal = rows.reduce((s, r) => s + r.val, 0);
+
+    $("#foPeriodo").innerHTML = perLbl(st.ano, st.mes);
+    $("#foBruto").textContent = money(tProd);
+    $("#foVales").textContent = money(tVal);
+    $("#foLiq").textContent   = money(tProd - tVal);
+    $("#foFunc").textContent  = rows.length;
+    $("#foTitulo").textContent = `Folha — ${MESES[st.mes]}/${st.ano}`;
+    $("#foPrintEmp").textContent = nomeEmpresa() + " — Folha de Pagamento";
+    $("#foPrintPer").textContent = `Competência ${MESES[st.mes]}/${st.ano} · período ${periodoTxt(st.ano, st.mes)}`;
+
+    if (!rows.length) {
+      $("#foBody").innerHTML = `<tr><td colspan="4"><div class="empty"><i class="bi bi-wallet2"></i>Nenhuma produção ou vale neste período.</div></td></tr>`;
+    } else {
+      $("#foBody").innerHTML = rows.map(r => {
+        /* Detalhe: produção somada por obra + serviço + valor unitário */
+        const ag = new Map();
+        r.lf.forEach(l => {
+          const key = l.obraId + "|" + l.servicoId + "|" + l.mo;
+          if (!ag.has(key)) ag.set(key, { obra: nomeObra(l.obraId), nome: l.nome, un: l.un, mo: l.mo, qtd: 0, v: 0 });
+          const x = ag.get(key); x.qtd += l.qtd; x.v += vMO(l);
+        });
+        const det = [...ag.values()].sort((a, b) => a.obra.localeCompare(b.obra, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR")).map(x =>
+          `<div class="det-line"><span>${esc(x.obra)} · ${esc(x.nome)}<span class="sub-line">${fqu(r2(x.qtd), x.un)} × ${money(x.mo)}</span></span><span class="v">${money(x.v)}</span></div>`).join("");
+        const dv = r.vf.map(v => `<div class="det-line minus"><span>${fmtDM(v.data)} · ${esc(v.desc || "Vale")}</span><span class="v">−${money(v.valor)}</span></div>`).join("");
+        const aberto = folhaAbertos.has(r.id) ? " open" : "";
+        return `<tr class="click-row${aberto}" data-fold="${r.id}">
+            <td><i class="bi bi-chevron-right chev no-print"></i><b style="font-weight:600;">${esc(r.nome)}</b>${r.funcao ? `<span class="sub-line">${esc(r.funcao)}</span>` : ""}</td>
+            <td class="num hide-xs">${money(r.prod)}</td>
+            <td class="num hide-xs">${r.val ? "−" + money(r.val) : "—"}</td>
+            <td class="num" style="font-weight:700;${r.liq < 0 ? "color:var(--danger);" : ""}">${money(r.liq)}</td>
+          </tr>
+          <tr class="det-row${aberto}" data-det="${r.id}"><td colspan="4">
+            ${det ? `<div class="det-head">Produção</div>${det}` : ""}
+            ${dv ? `<div class="det-head">Vales</div>${dv}` : ""}
+            <div class="det-line" style="font-weight:700;"><span>Líquido a pagar</span><span class="v">${money(r.liq)}</span></div>
+          </td></tr>`;
+      }).join("") +
+      `<tr class="total-row"><td>Total</td><td class="num hide-xs">${money(tProd)}</td><td class="num hide-xs">${tVal ? "−" + money(tVal) : "—"}</td><td class="num" style="color:var(--accent);">${money(tProd - tVal)}</td></tr>`;
+    }
+
+    $("#vaCount").textContent = plural(vs.length, "vale", "vales");
+    $("#vaBody").innerHTML = vs.length ? vs.map(v => `
+      <tr>
+        <td><b style="font-weight:600;">${esc(nomeFunc(v.funcId))}</b><span class="sub-line">${fmtDMY(v.data)}${v.desc ? " · " + esc(v.desc) : ""}</span></td>
+        <td class="num" style="font-weight:700;">${money(v.valor)}</td>
+        <td class="act-cell" style="white-space:nowrap;text-align:right;">
+          <button class="btn-act edit" data-edit-vale="${v.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn-act del" data-del-vale="${v.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
+        </td>
+      </tr>`).join("") : `<tr><td colspan="3"><div class="empty"><i class="bi bi-cash-coin"></i>Nenhum vale neste período.</div></td></tr>`;
+  }
+  $("#foBody").addEventListener("click", e => {
+    const tr = e.target.closest("[data-fold]");
+    if (!tr) return;
+    const id = tr.dataset.fold;
+    folhaAbertos.has(id) ? folhaAbertos.delete(id) : folhaAbertos.add(id);
+    tr.classList.toggle("open");
+    $("#foBody").querySelector(`[data-det="${id}"]`).classList.toggle("open");
+  });
+  $("#btnPrintFolha").addEventListener("click", () => imprimir($("#folhaPanel")));
+
+  /* Modal vale */
+  const modalVale = new bootstrap.Modal($("#modalVale"));
+  let editValeId = null;
+  maskMoney($("#vValor"));
+  function openModalVale(id) {
+    editValeId = id || null;
+    const v = editValeId && vales.find(x => x.id === editValeId);
+    const lista = funcs.filter(f => f.ativo !== false || (v && f.id === v.funcId)).sort(byNome);
+    $("#vFunc").innerHTML = `<option value="">Selecione…</option>` + lista.map(f => `<option value="${f.id}">${esc(f.nome)}</option>`).join("");
+    $("#valeTitulo").textContent = v ? "Editar Vale" : "Novo Vale";
+    setCents($("#vValor"), v ? v.valor : 0);
+    $("#vData").value = v ? v.data : today();
+    $("#vFunc").value = v ? v.funcId : (lista.length === 1 ? lista[0].id : "");
+    $("#vDesc").value = v ? v.desc || "" : "";
+    $("#valeErr").style.display = "none";
+    if (!lista.length) { $("#valeErr").innerHTML = `<i class="bi bi-exclamation-triangle"></i> Cadastre um funcionário antes de lançar vales.`; $("#valeErr").style.display = "block"; }
+    modalVale.show();
+  }
+  $("#modalVale").addEventListener("shown.bs.modal", () => $("#vValor").focus());
+  document.querySelectorAll("[data-novo-vale]").forEach(b => b.addEventListener("click", () => openModalVale()));
+  $("#formVale").addEventListener("submit", e => {
+    e.preventDefault();
+    const err = $("#valeErr");
+    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const valor = getCents($("#vValor")), data = $("#vData").value, funcId = $("#vFunc").value;
+    if (!(valor > 0)) return fail("Informe o valor do vale.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return fail("Informe a data.");
+    if (!funcId) return fail("Selecione o funcionário.");
+    const dados = { valor, data, funcId, desc: $("#vDesc").value.trim() };
+    if (editValeId) Object.assign(vales.find(x => x.id === editValeId), dados);
+    else vales.push({ id: uid(), ...dados, reg: stampNow() });
+    persist(K.val, vales);
+    modalVale.hide();
+    renderView(currentView());
+  });
+  $("#vaBody").addEventListener("click", e => {
+    const ed = e.target.closest("[data-edit-vale]");
+    const dl = e.target.closest("[data-del-vale]");
+    if (ed) openModalVale(ed.dataset.editVale);
+    if (dl) {
+      const v = vales.find(x => x.id === dl.dataset.delVale);
+      if (!v || !confirm(`Excluir o vale de ${money(v.valor)} de ${nomeFunc(v.funcId)}?`)) return;
+      vales = vales.filter(x => x.id !== v.id);
+      persist(K.val, vales);
+      renderFolha();
+    }
+  });
+
+  /* ══════════════════════════════════
+     ANUAL + GRÁFICO
+  ══════════════════════════════════ */
+  let anualMeses = [];
+  function bestMes() {
+    let best = -1;
+    anualMeses.forEach((m, i) => { if (m.mo > 0 && (best < 0 || m.mo > anualMeses[best].mo)) best = i; });
+    return best;
+  }
+
+  function renderAnual() {
+    fillAnoSelect($("#filtAno"), selAno);
+    anualMeses = MESES.map((_, i) => {
+      const r = resumo(doMes(lancs, selAno, i));
+      r.vales = somaVales(doMes(vales, selAno, i));
+      return r;
+    });
+    const rAno = resumo(doAno(lancs, selAno));
+    const vAno = somaVales(doAno(vales, selAno));
+    const comProd = anualMeses.filter(m => m.qt > 0);
+
+    $("#aFolha").textContent    = money(rAno.mo);
+    $("#aFolhaSub").textContent = `vales ${money(vAno)} · líquido ${money(rAno.mo - vAno)}`;
+    $("#aMedia").textContent    = money(comProd.length ? Math.round(rAno.mo / comProd.length) : 0);
+    $("#aM2").textContent       = `${fq(rAno.m2)} m²`;
+    $("#aMl").textContent       = `${fq(rAno.ml)} ml`;
+    $("#aCli").textContent      = money(rAno.cli);
+    $("#aCliSub").textContent   = rAno.cli ? `mão de obra = ${pctTxt(rAno.mo / rAno.cli * 100)} do medido` : "";
+    $("#aTitulo").textContent   = `Folha (produção) por mês — ${selAno}`;
+
+    const dash = v => v ? money(v) : "—";
+    $("#aBody").innerHTML = anualMeses.map((m, i) => `
+      <tr class="click-row" data-mes="${i}">
+        <td>${MESES[i]}</td>
+        <td class="num hide-xs">${m.m2 ? fq(m.m2) : "—"}</td>
+        <td class="num hide-sm">${dash(m.cli)}</td>
+        <td class="num" style="font-weight:700;">${dash(m.mo)}</td>
+        <td class="num hide-sm">${dash(m.vales)}</td>
+        <td class="num hide-sm">${m.mo || m.vales ? money(m.mo - m.vales) : "—"}</td>
+      </tr>`).join("") +
+      `<tr class="total-row"><td>Total</td><td class="num hide-xs">${fq(rAno.m2)}</td><td class="num hide-sm">${money(rAno.cli)}</td>
+        <td class="num" style="color:var(--accent);">${money(rAno.mo)}</td><td class="num hide-sm">${money(vAno)}</td><td class="num hide-sm">${money(rAno.mo - vAno)}</td></tr>`;
+
+    drawChart(bestMes());
+  }
+
+  const abrirFolhaMes = mes => { P.folha.ano = selAno; P.folha.mes = mes; goTo("folha"); };
+  $("#aBody").addEventListener("click", e => {
+    const tr = e.target.closest("[data-mes]");
+    if (tr) abrirFolhaMes(+tr.dataset.mes);
+  });
+  const setAno = ano => { selAno = ano; renderAnual(); };
+  $("#filtAno").addEventListener("change", e => setAno(+e.target.value));
+  $("#anoPrev").addEventListener("click", () => setAno(selAno - 1));
+  $("#anoNext").addEventListener("click", () => setAno(selAno + 1));
+
+  /* Escala "bonita" para o eixo Y: 1, 2, 2.5, 5 × 10^n */
+  function niceStep(max, ticks) {
+    const raw = max / ticks;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const f = raw / mag;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+  }
+
+  function drawChart(best) {
+    const box = $("#chartBox");
+    const tip = $("#chartTip");
+    tip.style.display = "none";
+    box.querySelector("svg")?.remove();
+    box.querySelector(".empty")?.remove();
+
+    const vals = anualMeses.map(x => Math.max(x.mo, 0));
+    if (!vals.some(v => v > 0)) {
+      box.insertAdjacentHTML("beforeend", `<div class="empty"><i class="bi bi-bar-chart"></i>Nenhuma produção lançada em ${selAno}.</div>`);
+      return;
+    }
+
+    const W = Math.max(box.clientWidth, 300);
+    const narrow = W < 520;
+    const H = narrow ? 240 : 300;
+    const m = { top: 24, right: 8, bottom: 28, left: narrow ? 52 : 64 };
+    const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+
+    const max = Math.max(...vals);
+    const step = niceStep(max, 4);
+    const top  = Math.ceil(max / step) * step;
+    const y = v => m.top + ih - (v / top) * ih;
+    const slot = iw / 12;
+    const bw = Math.max(Math.min(slot - 2 - (narrow ? 4 : 14), 44), 6);
+    const r = Math.min(4, bw / 2);
+    const cur = comp0.ano === selAno ? comp0.mes : -1;
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras da folha por mês em ${selAno}">`;
+    for (let v = 0; v <= top + 1; v += step) {
+      const yy = Math.round(y(v)) + .5;
+      if (v > 0) s += `<line class="gridline" x1="${m.left}" x2="${W - m.right}" y1="${yy}" y2="${yy}"/>`;
+      s += `<text class="tick" x="${m.left - 8}" y="${yy + 4}" text-anchor="end">${moneyShort(v)}</text>`;
+    }
+    vals.forEach((val, i) => {
+      const cx = m.left + slot * i + slot / 2;
+      const x0 = cx - bw / 2;
+      s += `<g class="col" data-i="${i}">`;
+      if (val > 0) {
+        const yt = y(val), h = m.top + ih - yt;
+        const rr = Math.min(r, h);
+        /* barra com cantos arredondados só no topo, ancorada na base */
+        s += `<path class="bar" d="M${x0},${m.top + ih} V${yt + rr} Q${x0},${yt} ${x0 + rr},${yt} H${x0 + bw - rr} Q${x0 + bw},${yt} ${x0 + bw},${yt + rr} V${m.top + ih} Z"/>`;
+        if (i === best) {
+          /* rótulo do melhor mês, mantido dentro da área do gráfico (não cobre o eixo Y) */
+          const lbl = moneyShort(val), half = lbl.length * 3.4;
+          const lx = Math.min(Math.max(cx, m.left + half), W - m.right - half);
+          s += `<text class="dlab" x="${lx}" y="${yt - 7}" text-anchor="middle">${lbl}</text>`;
+        }
+      }
+      s += `<text class="xlab${i === cur ? " cur" : ""}" x="${cx}" y="${H - 8}" text-anchor="middle">${W < 420 ? MES3[i][0] : MES3[i]}</text>`;
+      s += `<rect class="hit" x="${m.left + slot * i}" y="${m.top}" width="${slot}" height="${ih + m.bottom}"/>`;
+      s += `</g>`;
+    });
+    s += `<line class="baseline" x1="${m.left}" x2="${W - m.right}" y1="${m.top + ih + .5}" y2="${m.top + ih + .5}"/>`;
+    s += `</svg>`;
+    box.insertAdjacentHTML("afterbegin", s);
+
+    const svg = box.querySelector("svg");
+    let hovered = -1;
+    const show = i => {
+      svg.querySelectorAll(".col").forEach(g => g.classList.toggle("hover", +g.dataset.i === i));
+      hovered = i;
+      const mm = anualMeses[i];
+      tip.innerHTML = `<small>${MESES[i]} ${selAno} · produção</small><b>${money(mm.mo)}</b>` +
+        `<small>${fq(mm.m2)} m² · ${fq(mm.ml)} ml · medido ${money(mm.cli)}<br>vales ${money(mm.vales)} · líquido ${money(mm.mo - mm.vales)}</small>`;
+      tip.style.display = "block";
+      const scale = svg.getBoundingClientRect().width / W;
+      const cx = (m.left + slot * i + slot / 2) * scale;
+      const tw = tip.offsetWidth;
+      const left = Math.min(Math.max(cx - tw / 2, 0), box.clientWidth - tw);
+      const barTop = vals[i] > 0 ? y(vals[i]) : m.top + ih;
+      tip.style.left = left + "px";
+      tip.style.top  = Math.max(barTop * scale - tip.offsetHeight - 10, 0) + "px";
+    };
+    const hide = () => {
+      svg.querySelectorAll(".col").forEach(g => g.classList.remove("hover"));
+      tip.style.display = "none";
+      hovered = -1;
+    };
+    svg.querySelectorAll(".col").forEach(g => {
+      const i = +g.dataset.i;
+      g.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") show(i); });
+      g.addEventListener("click", () => {
+        /* mouse: clique abre o mês; toque: 1º toque mostra detalhe, 2º abre */
+        if (hovered === i) abrirFolhaMes(i);
+        else show(i);
+      });
+    });
+    svg.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") hide(); });
+  }
+
+  let resizeT;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { if (currentView() === "anual") drawChart(bestMes()); }, 150);
+  });
+
+  /* ══════════════════════════════════
+     SERVIÇOS (catálogo)
+  ══════════════════════════════════ */
+  $("#sUn").innerHTML = Object.entries(UN_NOME).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+  function renderServicos() {
+    const list = [...srvs].sort(byNome);
+    $("#sBody").innerHTML = list.length ? list.map(s => `
+      <tr>
+        <td><b style="font-weight:600;">${esc(s.nome)}</b><span class="sub-line">${UN_NOME[s.un] || s.un}</span></td>
+        <td class="num hide-xs">${s.preco ? money(s.preco) : "—"}</td>
+        <td class="num" style="font-weight:700;">${money(s.mo)}<small style="display:block;font-weight:500;color:var(--text-muted);font-size:12px;">por ${UN[s.un] || s.un}</small></td>
+        <td style="white-space:nowrap;text-align:right;">
+          <button class="btn-act edit" data-edit-srv="${s.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn-act del" data-del-srv="${s.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
+        </td>
+      </tr>`).join("")
+      : `<tr><td colspan="4"><div class="empty"><i class="bi bi-tags"></i>Nenhum serviço cadastrado.</div></td></tr>`;
+  }
+  const modalSrv = new bootstrap.Modal($("#modalSrv"));
+  let editSrvId = null;
+  maskMoney($("#sPreco")); maskMoney($("#sMo"));
+  function openModalSrv(id) {
+    editSrvId = id || null;
+    const s = editSrvId && srvById(editSrvId);
+    $("#srvTitulo").textContent = s ? "Editar Serviço" : "Novo Serviço";
+    $("#sNome").value = s ? s.nome : "";
+    $("#sUn").value = s ? s.un : "m2";
+    /* Unidade não muda depois de lançada produção: misturaria m² com ml no mesmo serviço */
+    $("#sUn").disabled = !!s && lancs.some(l => l.servicoId === s.id);
+    setCents($("#sPreco"), s ? s.preco : 0);
+    setCents($("#sMo"), s ? s.mo : 0);
+    $("#srvErr").style.display = "none";
+    modalSrv.show();
+  }
+  $("#modalSrv").addEventListener("shown.bs.modal", () => $("#sNome").focus());
+  $("#btnNovoSrv").addEventListener("click", () => openModalSrv());
+  $("#formSrv").addEventListener("submit", e => {
+    e.preventDefault();
+    const err = $("#srvErr");
+    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    const nome = $("#sNome").value.trim(), un = $("#sUn").value, preco = getCents($("#sPreco")), mo = getCents($("#sMo"));
+    if (!nome) return fail("Informe o nome do serviço.");
+    if (!(mo > 0) && !(preco > 0)) return fail("Informe o valor da mão de obra e/ou o preço ao cliente.");
+    if (srvs.some(s => s.id !== editSrvId && s.nome.toLowerCase() === nome.toLowerCase())) return fail("Já existe um serviço com esse nome.");
+    if (editSrvId) {
+      const s = srvById(editSrvId);
+      Object.assign(s, { nome, un, preco, mo });
+      /* nome/unidade atualizam nos orçamentos; preços do orçamento ficam como contratados */
+      obras.forEach(o => o.itens.forEach(i => { if (i.servicoId === s.id) { i.nome = nome; i.un = un; } }));
+      persist(K.obr, obras);
+    } else srvs.push({ id: uid(), nome, un, preco, mo });
+    persist(K.srv, srvs);
+    modalSrv.hide();
+    renderServicos();
+  });
+  $("#sBody").addEventListener("click", e => {
+    const ed = e.target.closest("[data-edit-srv]");
+    const dl = e.target.closest("[data-del-srv]");
+    if (ed) openModalSrv(ed.dataset.editSrv);
+    if (dl) {
+      const s = srvById(dl.dataset.delSrv);
+      if (!s) return;
+      if (obras.some(o => o.itens.some(i => i.servicoId === s.id))) { alert(`"${s.nome}" está no orçamento de uma obra. Remova-o do orçamento antes de excluir.`); return; }
+      if (!confirm(`Excluir o serviço "${s.nome}"?\n\nA produção já lançada com ele não muda.`)) return;
+      srvs = srvs.filter(x => x.id !== s.id);
+      persist(K.srv, srvs);
+      renderServicos();
+    }
+  });
+
+  /* ══════════════════════════════════
+     FUNCIONÁRIOS
+  ══════════════════════════════════ */
+  function renderFuncionarios() {
+    const c = competencia(today());
+    const lm = doMes(lancs, c.ano, c.mes);
+    const list = [...funcs].sort((a, b) => (b.ativo !== false) - (a.ativo !== false) || byNome(a, b));
+    $("#fBody").innerHTML = list.length ? list.map(f => {
+      const r = resumo(lm.filter(l => l.funcId === f.id));
+      return `<tr>
+        <td><b style="font-weight:600;">${esc(f.nome)}</b>
+          <span class="sub-line">${f.funcao ? esc(f.funcao) + " " : ""}${f.ativo === false ? `<span class="badge-soft st-inativo">Inativo</span>` : ""}</span></td>
+        <td class="num hide-xs val-cell"><b>${money(r.mo)}</b><small>${fq(r.m2)} m² · ${MESES[c.mes].toLowerCase()}</small></td>
+        <td style="white-space:nowrap;text-align:right;">
+          <button class="btn-act edit" data-edit-func="${f.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn-act del" data-del-func="${f.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="3"><div class="empty"><i class="bi bi-people"></i>Nenhum funcionário cadastrado.</div></td></tr>`;
+  }
+  const modalFunc = new bootstrap.Modal($("#modalFunc"));
+  let editFuncId = null;
+  function openModalFunc(id) {
+    editFuncId = id || null;
+    const f = editFuncId && funcById(editFuncId);
+    $("#funcTitulo").textContent = f ? "Editar Funcionário" : "Novo Funcionário";
+    $("#fNome").value = f ? f.nome : "";
+    $("#fFuncao").value = f ? f.funcao || "" : "";
+    $("#fAtivo").checked = f ? f.ativo !== false : true;
+    $("#funcErr").style.display = "none";
+    modalFunc.show();
+  }
+  $("#modalFunc").addEventListener("shown.bs.modal", () => $("#fNome").focus());
+  $("#btnNovoFunc").addEventListener("click", () => openModalFunc());
+  $("#formFunc").addEventListener("submit", e => {
+    e.preventDefault();
+    const err = $("#funcErr");
+    const nome = $("#fNome").value.trim();
+    const fail = msg => { err.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`; err.style.display = "block"; };
+    if (!nome) return fail("Informe o nome.");
+    if (funcs.some(f => f.id !== editFuncId && f.nome.toLowerCase() === nome.toLowerCase())) return fail("Já existe um funcionário com esse nome.");
+    const dados = { nome, funcao: $("#fFuncao").value.trim(), ativo: $("#fAtivo").checked };
+    if (editFuncId) Object.assign(funcById(editFuncId), dados);
+    else funcs.push({ id: uid(), ...dados, criado: stampNow() });
+    persist(K.fun, funcs);
+    modalFunc.hide();
+    renderFuncionarios();
+  });
+  $("#fBody").addEventListener("click", e => {
+    const ed = e.target.closest("[data-edit-func]");
+    const dl = e.target.closest("[data-del-func]");
+    if (ed) openModalFunc(ed.dataset.editFunc);
+    if (dl) {
+      const f = funcById(dl.dataset.delFunc);
+      if (!f) return;
+      /* Com produção ou vale lançado, só inativa: a folha antiga continua com o nome */
+      if (lancs.some(l => l.funcId === f.id) || vales.some(v => v.funcId === f.id)) {
+        if (f.ativo === false) { alert(`${f.nome} já está inativo e tem lançamentos na folha, por isso não pode ser excluído.`); return; }
+        if (!confirm(`${f.nome} tem produção ou vales lançados e não pode ser excluído.\n\nDeseja marcá-lo como inativo? (some dos lançamentos novos)`)) return;
+        f.ativo = false;
+      } else {
+        if (!confirm(`Excluir o funcionário "${f.nome}"?`)) return;
+        funcs = funcs.filter(x => x.id !== f.id);
+      }
+      persist(K.fun, funcs);
+      renderFuncionarios();
+    }
+  });
+
+  /* ══════════════════════════════════
+     CONFIGURAÇÕES
+  ══════════════════════════════════ */
+  $("#cfgCorte").innerHTML = `<option value="0">Último dia do mês (mês do calendário)</option>` +
+    Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}">Dia ${i + 1}</option>`).join("");
+
+  const readCfgForm = () => ({ empresa: $("#cfgEmpresa").value.trim(), responsavel: $("#cfgResp").value.trim(), corte: +$("#cfgCorte").value });
+  function fillCfgForm() {
+    $("#cfgEmpresa").value = cfg.empresa;
+    $("#cfgResp").value = cfg.responsavel;
+    $("#cfgCorte").value = cfg.corte;
+    renderCfgPreview();
+  }
+  /* Mostra o período do mês atual com o valor do formulário, antes de salvar */
+  function renderCfgPreview() {
+    const salvo = cfg.corte;
+    cfg.corte = readCfgForm().corte;
+    const c = competencia(today());
+    const txt = `Mês atual (${MESES[c.mes].toLowerCase()}): ${periodoTxt(c.ano, c.mes)}`;
+    cfg.corte = salvo;
+    $("#cfgPeriodo").innerHTML = `<i class="bi bi-calendar-range"></i> ${txt}`;
+  }
+  $("#cfgCorte").addEventListener("change", renderCfgPreview);
+  $("#formCfg").addEventListener("submit", e => {
+    e.preventDefault();
+    cfg = readCfgForm();
+    persist(K.cfg, cfg);
+    applyBrand();
+    const c = competencia(today());
+    P.prod = { ...c }; P.folha = { ...c }; P.med = { ...c };
+    const res = $("#cfgResult");
+    res.innerHTML = `<div class="a-info"><i class="bi bi-check-circle-fill"></i> Configurações salvas.</div>`;
+    res.style.display = "block";
+  });
+
+  /* ─── Init ─── */
+  applyBrand();
+  goTo("dashboard");
+})();
+</script>
+</body>
+</html>
