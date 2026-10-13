@@ -353,8 +353,8 @@
     <p class="login-msg" id="loginMsg"><span class="spinner-border spinner-border-sm me-2"></span>Carregando…</p>
     <form id="formLogin" novalidate hidden>
       <div class="mb-3">
-        <label class="form-label" for="lgEmail">E-mail</label>
-        <input type="email" class="form-control" id="lgEmail" autocomplete="username" />
+        <label class="form-label" for="lgEmail">Usuário ou e-mail</label>
+        <input type="text" class="form-control" id="lgEmail" autocomplete="username" autocapitalize="none" spellcheck="false" />
       </div>
       <div class="mb-3">
         <label class="form-label" for="lgSenha">Senha</label>
@@ -2484,11 +2484,12 @@ function iniciarApp(DB) {
   const TIPO  = { dw_obras_v1: "obra", dw_serv_v1: "servico", dw_func_v1: "funcionario", dw_lanc_v1: "lancamento", dw_vales_v1: "vale", dw_cfg_v1: "config" };
   const CHAVE = Object.fromEntries(Object.entries(TIPO).map(([k, t]) => [t, k]));
   const LOTE  = 500;
+  const DOMINIO_USUARIO = "@adamus.local";
   const $ = s => document.querySelector(s);
 
   /* ─── Tela de login ─── */
   function mostrarLogin(msg) {
-    $("#loginMsg").textContent = msg || "Entre com seu e-mail e senha.";
+    $("#loginMsg").textContent = msg || "Entre com seu usuário e senha.";
     $("#formLogin").hidden = false;
     $("#lgBtn").disabled = false;
     setTimeout(() => $("#lgEmail").focus(), 50);
@@ -2499,15 +2500,17 @@ function iniciarApp(DB) {
   }
   $("#formLogin").addEventListener("submit", async e => {
     e.preventDefault();
-    const email = $("#lgEmail").value.trim(), password = $("#lgSenha").value;
+    /* Sem "@" é nome de usuário: o Supabase exige e-mail, então vira usuario@adamus.local */
+    const login = $("#lgEmail").value.trim().toLowerCase(), password = $("#lgSenha").value;
+    const email = login && !login.includes("@") ? login + DOMINIO_USUARIO : login;
     const err = $("#lgErr");
     err.style.display = "none";
-    if (!email || !password) { err.textContent = "Informe e-mail e senha."; err.style.display = "block"; return; }
+    if (!email || !password) { err.textContent = "Informe usuário e senha."; err.style.display = "block"; return; }
     $("#lgBtn").disabled = true;
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       $("#lgBtn").disabled = false;
-      err.textContent = error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : "Não foi possível entrar: " + error.message;
+      err.textContent = error.message === "Invalid login credentials" ? "Usuário ou senha incorretos." : "Não foi possível entrar: " + error.message;
       err.style.display = "block";
       return;
     }
