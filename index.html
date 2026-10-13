@@ -326,13 +326,14 @@
     .login-msg{font-size:13.5px;color:var(--text-muted);margin:0 0 16px;}
 
     /* Gestor: só consulta, sem botões de lançar / editar / excluir */
-    body.leitura:not(.encarregado) [data-nova-prod],body.leitura:not(.encarregado) #view-producao .btn-act,body.leitura [data-novo-vale],body.leitura #btnNovaObra,body.leitura #btnNovoItem,
-    body.leitura #odEditar,body.leitura #odExcluir,body.leitura #btnNovoSrv,body.leitura #btnNovoFunc,
-    body.leitura:not(.encarregado) .btn-act,body.encarregado .view:not(#view-producao) .btn-act,body.leitura .nav-item[data-view="config"]{display:none!important;}
+    body.leitura:not(.encarregado) [data-nova-prod],body.leitura:not(.encarregado) #view-producao .btn-act,body.leitura [data-novo-vale],body.leitura:not(.encarregado) #btnNovaObra,body.leitura #btnNovoItem,
+    body.leitura:not(.encarregado) #odEditar,body.leitura #odExcluir,body.leitura #btnNovoSrv,body.leitura:not(.encarregado) #btnNovoFunc,
+    body.leitura:not(.encarregado) .btn-act,body.encarregado .view:not(#view-producao):not(#view-funcionarios) .btn-act,
+    body.encarregado [data-del-func],body.leitura .nav-item[data-view="config"]{display:none!important;}
 
-    /* Encarregado: só Produção e Mensagens, sem nenhum valor em R$ */
+    /* Encarregado: lança produção e cadastra obras e funcionários, sem nenhum valor em R$ */
     body.encarregado .nav-section,
-    body.encarregado .nav-item:not([data-view="producao"]):not([data-view="mensagens"]),
+    body.encarregado .nav-item:not([data-view="producao"]):not([data-view="obras"]):not([data-view="funcionarios"]):not([data-view="mensagens"]),
     body.encarregado .so-valor,body.encarregado #olhoBtn{display:none!important;}
     body.sem-chat [data-view="mensagens"],body.sem-chat #rsEnviarBox{display:none!important;}
 
@@ -710,7 +711,7 @@
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
               <h3 class="panel-title"><i class="bi bi-building"></i> Obras</h3>
-              <p class="panel-sub">Toque em uma obra para ver o orçamento, o avanço e o boletim de medição.</p>
+              <p class="panel-sub">Toque em uma obra para ver o orçamento<span class="so-valor">, o avanço e o boletim de medição</span>.</p>
             </div>
             <button class="btn btn-accent" id="btnNovaObra"><i class="bi bi-plus-lg"></i> Nova Obra</button>
           </div>
@@ -724,7 +725,7 @@
           </div>
           <div class="table-wrap mt-3">
             <table class="grid fit">
-              <thead><tr><th>Obra</th><th class="num hide-sm">Orçado</th><th class="num hide-xs">Medido</th><th style="min-width:130px;">Avanço</th></tr></thead>
+              <thead><tr><th>Obra</th><th class="num hide-sm so-valor">Orçado</th><th class="num hide-xs so-valor">Medido</th><th class="so-valor" style="min-width:130px;">Avanço</th></tr></thead>
               <tbody id="obBody"></tbody>
             </table>
           </div>
@@ -747,7 +748,7 @@
           </div>
         </div>
 
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 so-valor">
           <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odOrc">R$ 0,00</div><div class="l">Valor orçado</div><div class="s" id="odOrcSub"></div></div></div>
           <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odMed" style="color:var(--accent);">R$ 0,00</div><div class="l">Medido acumulado</div><div class="s" id="odSaldo"></div></div></div>
           <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="odPct">0%</div><div class="l">Avanço físico-financeiro</div><div class="s" id="odPctBar"></div></div></div>
@@ -764,13 +765,13 @@
           </div>
           <div class="table-wrap">
             <table class="grid fit">
-              <thead><tr><th>Serviço</th><th class="num">Orçado</th><th class="num">Executado</th><th class="num hide-sm">Preço un.</th><th class="num hide-sm">Total</th><th style="width:1%;"></th></tr></thead>
+              <thead><tr><th>Serviço</th><th class="num">Orçado</th><th class="num">Executado</th><th class="num hide-sm so-valor">Preço un.</th><th class="num hide-sm so-valor">Total</th><th style="width:1%;"></th></tr></thead>
               <tbody id="odItens"></tbody>
             </table>
           </div>
         </div>
 
-        <div class="panel" id="medicaoPanel">
+        <div class="panel so-valor" id="medicaoPanel">
           <div class="print-only mb-3">
             <h2 style="font-size:18px;font-weight:700;margin:0;" id="medPrintEmp"></h2>
             <div style="font-size:13px;" id="medPrintObra"></div>
@@ -1295,7 +1296,7 @@ function iniciarApp(DB) {
   /* ─── Storage ─── */
   const K = { obr: "dw_obras_v1", srv: "dw_serv_v1", fun: "dw_func_v1", lan: "dw_lanc_v1", val: "dw_vales_v1", cfg: "dw_cfg_v1", theme: "dw_theme" };
   const load    = (k, def) => DB.dados[k] ?? def;
-  /* admin: tudo · gestor: só consulta · encarregado: só lança produção, sem ver valores */
+  /* admin: tudo · gestor: só consulta · encarregado: lança produção e cadastra obras e funcionários, sem ver valores */
   const PAPEL = DB.perfil.papel, verValores = PAPEL !== "encarregado";
   const persist = (k, v) => DB.salvar(k, v);
 
@@ -1492,7 +1493,7 @@ function iniciarApp(DB) {
 
   let curObraId = null;
   function goTo(view) {
-    if (PAPEL === "encarregado" && !["producao", "mensagens", "perfil"].includes(view)) view = "producao";
+    if (PAPEL === "encarregado" && !["producao", "obras", "obra", "funcionarios", "mensagens", "perfil"].includes(view)) view = "producao";
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + view).classList.add("active");
     const navView = view === "obra" ? "obras" : view;
@@ -2044,9 +2045,9 @@ function iniciarApp(DB) {
       return `<tr class="click-row" data-obra="${o.id}">
         <td><b style="font-weight:600;">${esc(o.nome)}</b>
           <span class="sub-line">${statusBadge(o.status)}${o.cliente ? " " + esc(o.cliente) : ""}</span></td>
-        <td class="num hide-sm">${money(s.orc)}</td>
-        <td class="num hide-xs">${money(s.med)}</td>
-        <td>${progHtml(s.pct)}</td>
+        <td class="num hide-sm so-valor">${money(s.orc)}</td>
+        <td class="num hide-xs so-valor">${money(s.med)}</td>
+        <td class="so-valor">${progHtml(s.pct)}</td>
       </tr>`;
     }).join("") : `<tr><td colspan="4"><div class="empty"><i class="bi bi-building"></i>Nenhuma obra ${f ? "com este status" : "cadastrada"}.</div></td></tr>`;
   }
@@ -2120,14 +2121,14 @@ function iniciarApp(DB) {
         <td><b style="font-weight:600;">${esc(i.nome)}</b><div class="mt-1" style="max-width:260px;">${progHtml(p)}</div></td>
         <td class="num">${fqu(i.qtd, i.un)}</td>
         <td class="num val-cell"><b>${fqu(ex, i.un)}</b><small>saldo ${fq(r2(i.qtd - ex))}</small></td>
-        <td class="num hide-sm">${money(i.preco)}</td>
-        <td class="num hide-sm" style="font-weight:700;">${money(itemTotal(i))}</td>
+        <td class="num hide-sm so-valor">${money(i.preco)}</td>
+        <td class="num hide-sm so-valor" style="font-weight:700;">${money(itemTotal(i))}</td>
         <td class="act-cell" style="white-space:nowrap;text-align:right;">
           <button class="btn-act edit" data-edit-item="${i.id}" title="Editar"><i class="bi bi-pencil"></i></button>
           <button class="btn-act del" data-del-item="${i.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
         </td>
       </tr>`;
-    }).join("") + `<tr class="total-row"><td>Total orçado</td><td></td><td></td><td class="hide-sm"></td><td class="num hide-sm" style="color:var(--accent);">${money(s.orc)}</td><td></td></tr>`
+    }).join("") + `<tr class="total-row so-valor"><td>Total orçado</td><td></td><td></td><td class="hide-sm"></td><td class="num hide-sm" style="color:var(--accent);">${money(s.orc)}</td><td></td></tr>`
       : `<tr><td colspan="6"><div class="empty"><i class="bi bi-clipboard-data"></i>Nenhum item no orçamento. Adicione os serviços e as quantidades contratadas.</div></td></tr>`;
 
     renderMedicao();
@@ -2636,7 +2637,7 @@ function iniciarApp(DB) {
       return `<tr>
         <td><b style="font-weight:600;">${esc(f.nome)}</b>
           <span class="sub-line">${f.funcao ? esc(f.funcao) + " " : ""}${f.ativo === false ? `<span class="badge-soft st-inativo">Inativo</span>` : ""}</span></td>
-        <td class="num hide-xs val-cell"><b>${money(r.mo)}</b><small>${fq(r.m2)} m² · ${MESES[c.mes].toLowerCase()}</small></td>
+        <td class="num hide-xs val-cell">${verValores ? `<b>${money(r.mo)}</b><small>${fq(r.m2)} m² · ${MESES[c.mes].toLowerCase()}</small>` : `<b>${fq(r.m2)} m²</b><small>${MESES[c.mes].toLowerCase()}</small>`}</td>
         <td style="white-space:nowrap;text-align:right;">
           <button class="btn-act edit" data-edit-func="${f.id}" title="Editar"><i class="bi bi-pencil"></i></button>
           <button class="btn-act del" data-del-func="${f.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
@@ -3063,8 +3064,8 @@ function iniciarApp(DB) {
             if (error) throw error;
           },
         },
-        /* encarregado grava só lançamentos; gestor não grava nada (o banco também barra) */
-        salvar: (k, v) => salvar(k, v, !(admin || (perfil.papel === "encarregado" && k === "dw_lanc_v1"))),
+        /* encarregado grava lançamentos, obras e funcionários; gestor não grava nada (o banco também barra) */
+        salvar: (k, v) => salvar(k, v, !(admin || (perfil.papel === "encarregado" && ["dw_lanc_v1", "dw_obras_v1", "dw_func_v1"].includes(k)))),
         sair: async () => {
           if (pendentes && !(await UI.confirmar("Ainda há alterações sendo salvas. Sair mesmo assim?", { titulo: "Sair", botao: "Sair", perigo: true }))) return;
           await sb.auth.signOut();
