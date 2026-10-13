@@ -302,9 +302,30 @@
     .login-msg{font-size:13.5px;color:var(--text-muted);margin:0 0 16px;}
 
     /* Gestor: só consulta, sem botões de lançar / editar / excluir */
-    body.leitura [data-nova-prod],body.leitura [data-novo-vale],body.leitura #btnNovaObra,body.leitura #btnNovoItem,
+    body.leitura:not(.encarregado) [data-nova-prod],body.leitura:not(.encarregado) #view-producao .btn-act,body.leitura [data-novo-vale],body.leitura #btnNovaObra,body.leitura #btnNovoItem,
     body.leitura #odEditar,body.leitura #odExcluir,body.leitura #btnNovoSrv,body.leitura #btnNovoFunc,
-    body.leitura .btn-act,body.leitura .nav-item[data-view="config"]{display:none!important;}
+    body.leitura:not(.encarregado) .btn-act,body.encarregado .view:not(#view-producao) .btn-act,body.leitura .nav-item[data-view="config"]{display:none!important;}
+
+    /* Encarregado: só Produção e Mensagens, sem nenhum valor em R$ */
+    body.encarregado .nav-section,
+    body.encarregado .nav-item:not([data-view="producao"]):not([data-view="mensagens"]),
+    body.encarregado .so-valor,body.encarregado #olhoBtn{display:none!important;}
+    body.sem-chat [data-view="mensagens"],body.sem-chat #rsEnviarBox{display:none!important;}
+
+    /* Mensagens */
+    .nav-badge{margin-left:auto;background:var(--accent);color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:1px 8px;}
+    .chat-panel{display:flex;flex-direction:column;height:calc(100vh - 118px);min-height:420px;padding:0;overflow:hidden;}
+    .chat-top{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);}
+    .chat-top select{max-width:300px;}
+    .chat-list{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;}
+    .chat-dia{align-self:center;font-size:11.5px;color:var(--text-dim);margin-top:6px;}
+    .msg{max-width:min(560px,88%);padding:10px 14px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border);align-self:flex-start;}
+    .msg.eu{align-self:flex-end;background:rgba(var(--accent-rgb),.14);border-color:rgba(var(--accent-rgb),.35);}
+    .msg .txt{white-space:pre-wrap;word-break:break-word;font-size:14px;}
+    .msg .meta{font-size:11.5px;color:var(--text-muted);margin-top:6px;display:flex;gap:12px;justify-content:space-between;align-items:center;}
+    .msg .meta button{background:none;border:none;color:var(--accent);font-size:12px;padding:0;cursor:pointer;}
+    .chat-form{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--border);}
+    .chat-form textarea{resize:none;}
 
     /* Situação da gravação no servidor */
     .sync-st{font-size:18px;color:var(--text-dim);display:grid;place-items:center;width:32px;}
@@ -379,6 +400,7 @@
     </div>
     <div class="nav-section">Início</div>
     <div class="nav-item active" data-view="dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</div>
+    <div class="nav-item" data-view="mensagens"><i class="bi bi-chat-dots"></i> Mensagens <span class="nav-badge" id="msgBadge" hidden></span></div>
     <div class="nav-section">Execução</div>
     <div class="nav-item" data-view="producao"><i class="bi bi-rulers"></i> Produção Diária</div>
     <div class="nav-item" data-view="obras"><i class="bi bi-building"></i> Obras e Medição</div>
@@ -539,10 +561,10 @@
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prValor" style="color:var(--accent);">R$ 0,00</div><div class="l">Mão de obra produzida</div></div></div>
+          <div class="col-6 col-lg-3 so-valor"><div class="stat"><div class="n" id="prValor" style="color:var(--accent);">R$ 0,00</div><div class="l">Mão de obra produzida</div></div></div>
           <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prM2">0</div><div class="l">m² executados</div></div></div>
           <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prMl">0</div><div class="l">Metros lineares</div></div></div>
-          <div class="col-6 col-lg-3"><div class="stat"><div class="n" id="prCli">R$ 0,00</div><div class="l">Valor medido (cliente)</div></div></div>
+          <div class="col-6 col-lg-3 so-valor"><div class="stat"><div class="n" id="prCli">R$ 0,00</div><div class="l">Valor medido (cliente)</div></div></div>
         </div>
 
         <div class="panel">
@@ -552,10 +574,25 @@
           </div>
           <div class="table-wrap">
             <table class="grid fit">
-              <thead><tr><th>Serviço executado</th><th class="num">Qtd</th><th class="num">Mão de obra</th><th style="width:1%;"></th></tr></thead>
+              <thead><tr><th>Serviço executado</th><th class="num">Qtd</th><th class="num so-valor">Mão de obra</th><th style="width:1%;"></th></tr></thead>
               <tbody id="prBody"></tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- VIEW: MENSAGENS -->
+      <section class="view" id="view-mensagens">
+        <div class="panel chat-panel">
+          <div class="chat-top">
+            <label for="chatCom" class="form-label mb-0" style="white-space:nowrap;">Conversa com</label>
+            <select class="form-select" id="chatCom"></select>
+          </div>
+          <div class="chat-list" id="chatList"></div>
+          <form class="chat-form" id="chatForm" novalidate>
+            <textarea class="form-control" id="chatTexto" rows="2" placeholder="Escreva uma mensagem… (Enter envia, Shift+Enter quebra linha)"></textarea>
+            <button class="btn btn-accent" type="submit" title="Enviar"><i class="bi bi-send"></i></button>
+          </form>
         </div>
       </section>
 
@@ -866,7 +903,7 @@
             </div>
           </div>
           <div class="hint mb-3" id="lProg"></div>
-          <div class="calc compact" id="lCalc"></div>
+          <div class="calc compact so-valor" id="lCalc"></div>
           <div class="mt-3">
             <label class="form-label" for="lObs">Observação</label>
             <input type="text" class="form-control" id="lObs" placeholder="Opcional" autocomplete="off" />
@@ -935,11 +972,18 @@
       <div class="modal-body">
         <p class="hint mb-2" id="rsInfo"></p>
         <textarea class="form-control" id="rsTexto" rows="14" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace;font-size:13px;"></textarea>
-        <div id="rsOk" class="a-info mt-3" style="display:none;"><i class="bi bi-check-circle-fill"></i> Texto copiado. Cole na conversa com o gestor.</div>
+        <div class="mt-3" id="rsEnviarBox">
+          <label class="form-label" for="rsPara">Enviar pelo sistema para</label>
+          <div class="d-flex gap-2">
+            <select class="form-select" id="rsPara"></select>
+            <button type="button" class="btn btn-accent" id="rsEnviar" style="white-space:nowrap;"><i class="bi bi-send"></i> Enviar</button>
+          </div>
+        </div>
+        <div id="rsOk" class="a-info mt-3" style="display:none;"></div>
       </div>
       <div class="modal-footer">
         <a class="btn btn-ghost" id="rsWhats" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a>
-        <button type="button" class="btn btn-accent" id="rsCopiar"><i class="bi bi-clipboard"></i> Copiar</button>
+        <button type="button" class="btn btn-ghost" id="rsCopiar"><i class="bi bi-clipboard"></i> Copiar</button>
       </div>
     </div>
   </div>
@@ -1123,6 +1167,8 @@ function iniciarApp(DB) {
   /* ─── Storage ─── */
   const K = { obr: "dw_obras_v1", srv: "dw_serv_v1", fun: "dw_func_v1", lan: "dw_lanc_v1", val: "dw_vales_v1", cfg: "dw_cfg_v1", theme: "dw_theme" };
   const load    = (k, def) => DB.dados[k] ?? def;
+  /* admin: tudo · gestor: só consulta · encarregado: só lança produção, sem ver valores */
+  const PAPEL = DB.perfil.papel, verValores = PAPEL !== "encarregado";
   const persist = (k, v) => DB.salvar(k, v);
 
   /*
@@ -1285,6 +1331,7 @@ function iniciarApp(DB) {
   const pageMeta = {
     dashboard:    null,
     producao:     ["Produção Diária",     "O que cada funcionário executou"],
+    mensagens:    ["Mensagens",           "Conversas dentro do sistema"],
     obras:        ["Obras e Medição",     "Orçamento, avanço e medição"],
     obra:         ["Obra",                "Orçamento, execução e boletim de medição"],
     folha:        ["Folha de Pagamento",  "Produção, vales e líquido a pagar"],
@@ -1310,6 +1357,7 @@ function iniciarApp(DB) {
 
   let curObraId = null;
   function goTo(view) {
+    if (PAPEL === "encarregado" && view !== "producao" && view !== "mensagens") view = "producao";
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + view).classList.add("active");
     const navView = view === "obra" ? "obras" : view;
@@ -1327,6 +1375,7 @@ function iniciarApp(DB) {
   function renderView(view) {
     if (view === "dashboard")    renderDashboard();
     if (view === "producao")     renderProducao();
+    if (view === "mensagens")    renderChat();
     if (view === "obras")        renderObras();
     if (view === "obra")         renderObra();
     if (view === "folha")        renderFolha();
@@ -1528,14 +1577,14 @@ function iniciarApp(DB) {
       const [y, m, d] = data.split("-").map(Number);
       const dt = new Date(y, m - 1, d);
       const sub = resumo(itens);
-      html += `<tr class="day-row"><td colspan="4"><div class="day-flex"><span>${pad(d)}/${pad(m)} · ${SEMANA[dt.getDay()]}</span><span class="v">${sub.m2 ? fq(sub.m2) + " m² · " : ""}${money(sub.mo)}</span></div></td></tr>`;
+      html += `<tr class="day-row"><td colspan="4"><div class="day-flex"><span>${pad(d)}/${pad(m)} · ${SEMANA[dt.getDay()]}</span><span class="v">${verValores ? (sub.m2 ? fq(sub.m2) + " m² · " : "") + money(sub.mo) : (sub.m2 ? fq(sub.m2) + " m²" : "")}</span></div></td></tr>`;
       itens.forEach(l => {
         html += `<tr>
           <td><b style="font-weight:600;">${esc(l.nome)}</b>
             <span class="sub-line"><i class="bi bi-building"></i> ${esc(nomeObra(l.obraId))}${l.local ? " · " + esc(l.local) : ""}</span>
             <span class="sub-line"><i class="bi bi-person"></i> ${esc(nomeFunc(l.funcId))}${l.obs ? " · " + esc(l.obs) : ""}</span></td>
           <td class="num"><b>${fq(l.qtd)}</b> <span style="color:var(--text-muted);">${UN[l.un] || l.un}</span></td>
-          <td class="num val-cell"><b>${money(vMO(l))}</b><small>${money(l.mo)}/${UN[l.un] || l.un}</small></td>
+          <td class="num val-cell so-valor"><b>${money(vMO(l))}</b><small>${money(l.mo)}/${UN[l.un] || l.un}</small></td>
           <td class="act-cell" style="white-space:nowrap;text-align:right;">
             <button class="btn-act edit" data-edit="${l.id}" title="Editar"><i class="bi bi-pencil"></i></button>
             <button class="btn-act del" data-del="${l.id}" title="Excluir"><i class="bi bi-trash3"></i></button>
@@ -1579,7 +1628,7 @@ function iniciarApp(DB) {
     return [...blocos.values()]
       .sort((a, b) => nomeObra(a.obraId).localeCompare(nomeObra(b.obraId), "pt-BR") || nomeFunc(a.funcId).localeCompare(nomeFunc(b.funcId), "pt-BR"))
       .map(b => [`Obra ${nomeObra(b.obraId)}`, `Folha ${nomeFunc(b.funcId)}`,
-        ...[...b.itens.values()].map(s => `${s.nome}/${numTxt(r2(s.qtd))}${UN_TXT[s.un] ?? (UN[s.un] || s.un)}${s.mo ? "x" + numTxt(s.mo / 100) : ""}`)
+        ...[...b.itens.values()].map(s => `${s.nome}/${numTxt(r2(s.qtd))}${UN_TXT[s.un] ?? (UN[s.un] || s.un)}${s.mo && verValores ? "x" + numTxt(s.mo / 100) : ""}`)
       ].join("\n")).join("\n\n");
   }
 
@@ -1597,6 +1646,7 @@ function iniciarApp(DB) {
       `${fo ? " · " + esc(nomeObra(fo)) : ""}${ff ? " · " + esc(nomeFunc(ff)) : ""}. Use os filtros da Produção para separar por obra ou funcionário. Dá para editar o texto antes de enviar.`;
     $("#rsTexto").value = txt;
     $("#rsOk").style.display = "none";
+    if (CHAT.ok) fillPessoas($("#rsPara"), $("#rsPara").value);
     setResumo(txt);
     modalResumo.show();
   });
@@ -1605,8 +1655,89 @@ function iniciarApp(DB) {
     const ta = $("#rsTexto");
     try { await navigator.clipboard.writeText(ta.value); }
     catch { ta.select(); document.execCommand("copy"); }
-    $("#rsOk").style.display = "block";
+    rsAviso("Texto copiado. Cole na conversa com o gestor.");
   });
+  function rsAviso(txt) {
+    $("#rsOk").innerHTML = `<i class="bi bi-check-circle-fill"></i> ${esc(txt)}`;
+    $("#rsOk").style.display = "block";
+  }
+  $("#rsEnviar").addEventListener("click", async () => {
+    const para = $("#rsPara").value, texto = $("#rsTexto").value.trim();
+    if (!para || !texto) return;
+    const b = $("#rsEnviar");
+    b.disabled = true;
+    try {
+      await CHAT.enviar(para, texto);
+      rsAviso(`Enviado para ${nomePessoa(para)}. Aparece na tela Mensagens dele.`);
+    } catch (e) {
+      alert("Não foi possível enviar a mensagem: " + (e.message || e));
+    } finally { b.disabled = false; }
+  });
+
+  /* ══════════════════════════════════
+     MENSAGENS (dentro do sistema)
+  ══════════════════════════════════ */
+  const CHAT = DB.chat;
+  const PAPEL_TXT = { admin: "admin", gestor: "gestor", encarregado: "encarregado" };
+  const nomePessoa = id => CHAT.pessoas.find(p => p.user_id === id)?.nome || "Usuário";
+  const outros = () => CHAT.pessoas.filter(p => p.user_id !== CHAT.eu)
+    .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+  const naoLidas = () => CHAT.msgs.filter(m => m.para === CHAT.eu && !m.lida_em);
+  function fillPessoas(sel, keep) {
+    const ps = outros();
+    sel.innerHTML = ps.map(p => `<option value="${p.user_id}">${esc(p.nome || "Sem nome")} (${PAPEL_TXT[p.papel] || esc(p.papel)})</option>`).join("");
+    if (ps.some(p => p.user_id === keep)) sel.value = keep;
+    else sel.value = (ps.find(p => p.papel === "gestor") || ps[0] || {}).user_id || "";
+  }
+  function badgeChat() {
+    const n = naoLidas().length, b = $("#msgBadge");
+    b.hidden = !n;
+    b.textContent = n;
+  }
+  const horaMsg = iso => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const diaMsg  = iso => new Date(iso).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+
+  function renderChat() {
+    if (!CHAT.ok) return;
+    const sel = $("#chatCom");
+    /* abre na conversa com mensagem não lida; senão mantém a escolhida */
+    const pend = naoLidas()[0];
+    fillPessoas(sel, sel.value || (pend && pend.de));
+    const com = sel.value;
+    const list = CHAT.msgs.filter(m => (m.de === CHAT.eu && m.para === com) || (m.de === com && m.para === CHAT.eu));
+    let html = "", dia = "";
+    list.forEach(m => {
+      const d = diaMsg(m.criada_em);
+      if (d !== dia) { dia = d; html += `<div class="chat-dia">${d}</div>`; }
+      const eu = m.de === CHAT.eu;
+      html += `<div class="msg${eu ? " eu" : ""}"><div class="txt">${esc(m.texto)}</div>
+        <div class="meta"><span>${eu ? "Você" : esc(nomePessoa(m.de))} · ${horaMsg(m.criada_em)}${eu && m.lida_em ? " · lida" : ""}</span>
+        <button type="button" data-copiar="${m.id}"><i class="bi bi-clipboard"></i> Copiar</button></div></div>`;
+    });
+    const box = $("#chatList");
+    box.innerHTML = html || `<div class="empty"><i class="bi bi-chat-dots"></i>${com ? "Nenhuma mensagem ainda. Escreva abaixo ou envie o resumo pela tela Produção." : "Nenhum outro usuário cadastrado."}</div>`;
+    box.scrollTop = box.scrollHeight;
+    if (com) CHAT.marcarLidas(com);
+    badgeChat();
+  }
+  $("#chatCom").addEventListener("change", renderChat);
+  $("#chatList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-copiar]");
+    if (!b) return;
+    const m = CHAT.msgs.find(x => String(x.id) === b.dataset.copiar);
+    try { await navigator.clipboard.writeText(m.texto); b.innerHTML = `<i class="bi bi-check2"></i> Copiado`; } catch {}
+  });
+  async function enviarChat() {
+    const ta = $("#chatTexto"), texto = ta.value.trim(), para = $("#chatCom").value;
+    if (!texto || !para) return;
+    ta.disabled = true;
+    try { await CHAT.enviar(para, texto); ta.value = ""; }
+    catch (e) { alert("Não foi possível enviar a mensagem: " + (e.message || e)); }
+    finally { ta.disabled = false; ta.focus(); }
+  }
+  $("#chatForm").addEventListener("submit", e => { e.preventDefault(); enviarChat(); });
+  $("#chatTexto").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarChat(); } });
+  CHAT.ouvir(() => { badgeChat(); if (currentView() === "mensagens") renderChat(); });
 
   /* ══════════════════════════════════
      MODAL PRODUÇÃO (novo / editar)
@@ -1767,7 +1898,7 @@ function iniciarApp(DB) {
     if (!ok) return;
     resetProdForm(true);
     const info = $("#prodOk");
-    info.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${fqu(ok.qtd, ok.un)} de ${esc(ok.nome)} salvo (${money(vMO(ok))} de mão de obra). Lance o próximo.`;
+    info.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${fqu(ok.qtd, ok.un)} de ${esc(ok.nome)} salvo${verValores ? ` (${money(vMO(ok))} de mão de obra)` : ""}. Lance o próximo.`;
     info.style.display = "block";
     $("#lServ").focus();
   });
@@ -2461,11 +2592,14 @@ function iniciarApp(DB) {
   });
 
   /* ─── Init ─── */
-  document.body.classList.toggle("leitura", DB.perfil.papel !== "admin");
-  $("#userPapel").textContent = DB.perfil.papel === "admin" ? "ADMIN" : "GESTOR";
+  document.body.classList.toggle("leitura", PAPEL !== "admin");
+  document.body.classList.toggle("encarregado", PAPEL === "encarregado");
+  document.body.classList.toggle("sem-chat", !CHAT.ok);
+  $("#userPapel").textContent = { admin: "ADMIN", gestor: "GESTOR", encarregado: "ENCARREGADO" }[PAPEL] || PAPEL.toUpperCase();
+  badgeChat();
   $("#btnSair").addEventListener("click", DB.sair);
   applyBrand();
-  goTo("dashboard");
+  goTo(PAPEL === "encarregado" ? "producao" : "dashboard");
 }
 </script>
 <script>
@@ -2589,6 +2723,44 @@ function iniciarApp(DB) {
   }
   window.addEventListener("beforeunload", e => { if (pendentes) { e.preventDefault(); e.returnValue = ""; } });
 
+  /* ─── Mensagens: tabela "mensagens" (de, para, texto, lida_em); busca novas a cada 20 s ─── */
+  const chat = { ok: false, eu: null, pessoas: [], msgs: [], ultimo: 0, cbs: [] };
+  const avisar = () => chat.cbs.forEach(f => f());
+  async function buscarNovas() {
+    const { data, error } = await sb.from("mensagens").select("*").gt("id", chat.ultimo).order("id").limit(500);
+    if (error || !data.length) return;
+    chat.msgs.push(...data);
+    chat.ultimo = data[data.length - 1].id;
+    avisar();
+  }
+  async function iniciarChat(uid) {
+    chat.eu = uid;
+    const { data: ps, error: e1 } = await sb.from("perfis").select("user_id,nome,papel");
+    if (e1) throw e1;
+    const { data, error } = await sb.from("mensagens").select("*").order("id", { ascending: false }).limit(500);
+    if (error) throw error;
+    chat.pessoas = ps;
+    chat.msgs = data.reverse();
+    chat.ultimo = chat.msgs.length ? chat.msgs[chat.msgs.length - 1].id : 0;
+    chat.ok = true;
+    setInterval(buscarNovas, 20000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) buscarNovas(); });
+  }
+  chat.ouvir = f => chat.cbs.push(f);
+  chat.enviar = async (para, texto) => {
+    const { error } = await sb.from("mensagens").insert({ para, texto });
+    if (error) throw error;
+    await buscarNovas();
+  };
+  chat.marcarLidas = async de => {
+    const ids = chat.msgs.filter(m => m.para === chat.eu && m.de === de && !m.lida_em).map(m => m.id);
+    if (!ids.length) return;
+    const agora = new Date().toISOString();
+    chat.msgs.forEach(m => { if (ids.includes(m.id)) m.lida_em = agora; });
+    avisar();
+    await sb.from("mensagens").update({ lida_em: agora }).in("id", ids);
+  };
+
   /* ─── Entrada: perfil → dados → sistema ─── */
   let iniciado = false;
   async function entrar(session) {
@@ -2599,6 +2771,7 @@ function iniciarApp(DB) {
       if (error) throw error;
       if (!perfil) { await sb.auth.signOut(); return mostrarLogin("Este usuário não tem acesso liberado. Peça ao administrador."); }
       const admin = perfil.papel === "admin";
+      try { await iniciarChat(session.user.id); } catch (e) { console.warn("Mensagens indisponíveis:", e); }
       let rows = await baixarTudo();
       if (!rows.length && admin) rows = await talvezImportar();
 
@@ -2617,7 +2790,9 @@ function iniciarApp(DB) {
       document.body.classList.add("logado");
       iniciarApp({
         dados, perfil, email: session.user.email,
-        salvar: (k, v) => salvar(k, v, !admin),
+        chat,
+        /* encarregado grava só lançamentos; gestor não grava nada (o banco também barra) */
+        salvar: (k, v) => salvar(k, v, !(admin || (perfil.papel === "encarregado" && k === "dw_lanc_v1"))),
         sair: async () => {
           if (pendentes && !confirm("Ainda há alterações sendo salvas. Sair mesmo assim?")) return;
           await sb.auth.signOut();
